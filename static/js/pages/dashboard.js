@@ -60,8 +60,8 @@ if (addIncomeBtn) {
           const categoryEl = modalInstance.getField("#exp-category");
           const typeEl = modalInstance.getField("#exp-type");
           const dateEl = modalInstance.getField("#exp-date");
-          const paymentMethodEl = modalInstance.getField("#exp-payment-method");
           const recurringEl = modalInstance.getField("#exp-recurring");
+          const notesEl = modalInstance.getField("#exp-notes");
 
           if (!amountEl.value || !categoryEl.value || !typeEl.value || !dateEl.value) {
             showAlert("Fill all fields.", "error");
@@ -71,12 +71,7 @@ if (addIncomeBtn) {
           const amount = parseFloat(amountEl.value) || 0;
           const category = categoryEl.value.trim();
           const date = dateEl.value;
-          const paymentMethod = paymentMethodEl?.value;
-          
-          if (!paymentMethod) {
-            showAlert("Please select a payment method.", "error");
-            return false;
-          }
+          const notes = notesEl?.value?.trim() || "";
           const isRecurring = recurringEl ? recurringEl.checked : false;
 
           const transactionData = {
@@ -84,9 +79,12 @@ if (addIncomeBtn) {
             category,
             type: "income",
             date,
-            paymentMethod,
             isRecurring
           };
+          
+          if (notes) {
+            transactionData.notes = notes;
+          }
 
           if (isRecurring) {
             const frequencyEl = modalInstance.getField("#exp-frequency");
@@ -138,6 +136,7 @@ if (addExpenseBtn) {
           const dateEl = modalInstance.getField("#exp-date");
           const paymentMethodEl = modalInstance.getField("#exp-payment-method");
           const recurringEl = modalInstance.getField("#exp-recurring");
+          const notesEl = modalInstance.getField("#exp-notes");
 
           if (!amountEl.value || !categoryEl.value || !typeEl.value || !dateEl.value) {
             showAlert("Fill all fields.", "error");
@@ -148,6 +147,7 @@ if (addExpenseBtn) {
           const category = categoryEl.value.trim();
           const date = dateEl.value;
           const paymentMethod = paymentMethodEl?.value;
+          const notes = notesEl?.value?.trim() || "";
           
           if (!paymentMethod) {
             showAlert("Please select a payment method.", "error");
@@ -163,6 +163,10 @@ if (addExpenseBtn) {
             paymentMethod,
             isRecurring
           };
+          
+          if (notes) {
+            transactionData.notes = notes;
+          }
 
           if (isRecurring) {
             const frequencyEl = modalInstance.getField("#exp-frequency");

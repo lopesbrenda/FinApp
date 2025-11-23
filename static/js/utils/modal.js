@@ -62,31 +62,29 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
         <option value="income" ${selectedIncome}>Income</option>
       </select>
       
-      <div style="display: flex; gap: 8px; align-items: flex-end;">
-        <div style="flex: 1;">
-          <label for="exp-category">Category</label>
-          <select id="exp-category" required>
-            <option value="">Select category...</option>
-          </select>
-        </div>
-        <button type="button" id="add-custom-category" class="btn" style="min-width: auto; padding: 12px 10px; height: 45px; font-size: 16px;">
+      <label for="exp-category">Category</label>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <select id="exp-category" required style="flex: 1;">
+          <option value="">Select category...</option>
+        </select>
+        <button type="button" id="add-custom-category" class="btn" style="flex-shrink: 0; padding: 6px; width: 32px; height: 32px; font-size: 16px; line-height: 1; margin: 0;">
           +
         </button>
       </div>
       
-      <div style="display: flex; gap: 8px; align-items: flex-end;">
-        <div style="flex: 1;">
-          <label for="exp-payment-method">Payment Method</label>
-          <select id="exp-payment-method" required>
+      <div id="payment-method-container">
+        <label for="exp-payment-method">Payment Method</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select id="exp-payment-method" required style="flex: 1;">
             <option value="">Select payment method...</option>
             <option value="credit">💳 Credit Card</option>
             <option value="debit">💳 Debit Card</option>
             <option value="cash" selected>💵 Cash</option>
           </select>
+          <button type="button" id="add-custom-payment" class="btn" style="flex-shrink: 0; padding: 6px; width: 32px; height: 32px; font-size: 16px; line-height: 1; margin: 0;">
+            +
+          </button>
         </div>
-        <button type="button" id="add-custom-payment" class="btn" style="min-width: auto; padding: 12px 10px; height: 45px; font-size: 16px;">
-          +
-        </button>
       </div>
       
       <label for="exp-amount">Amount</label>
@@ -94,6 +92,9 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
       
       <label for="exp-date">Date</label>
       <input type="date" id="exp-date" value="${today}" required />
+      
+      <label for="exp-notes">Notes (Optional)</label>
+      <textarea id="exp-notes" placeholder="Add notes about this transaction..." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e6e6ee; font-size: 1rem; min-height: 80px; font-family: inherit; resize: vertical;"></textarea>
       
       <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
         <input type="checkbox" id="exp-recurring" style="width: auto; margin: 0;" />
@@ -173,6 +174,7 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
   const typeSelect = !isSubModal ? modal.querySelector("#exp-type") : null;
   const categorySelect = !isSubModal ? modal.querySelector("#exp-category") : null;
   const paymentMethodSelect = !isSubModal ? modal.querySelector("#exp-payment-method") : null;
+  const paymentMethodContainer = !isSubModal ? modal.querySelector("#payment-method-container") : null;
   const recurringCheckbox = !isSubModal ? modal.querySelector("#exp-recurring") : null;
   const recurringOptions = !isSubModal ? modal.querySelector("#recurring-options") : null;
 
@@ -243,13 +245,34 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
       }
     };
 
-    typeSelect.addEventListener("change", populateCategories);
+    const updatePaymentMethodVisibility = () => {
+      const selectedType = typeSelect.value;
+      if (paymentMethodContainer) {
+        if (selectedType === "income") {
+          paymentMethodContainer.style.display = "none";
+          if (paymentMethodSelect) {
+            paymentMethodSelect.removeAttribute("required");
+          }
+        } else {
+          paymentMethodContainer.style.display = "block";
+          if (paymentMethodSelect) {
+            paymentMethodSelect.setAttribute("required", "required");
+          }
+        }
+      }
+    };
+
+    typeSelect.addEventListener("change", () => {
+      populateCategories();
+      updatePaymentMethodVisibility();
+    });
     
     setTimeout(() => {
       if (typeSelect.value) {
         populateCategories();
       }
       populatePaymentMethods();
+      updatePaymentMethodVisibility();
     }, 50);
   }
   
