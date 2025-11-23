@@ -1,0 +1,213 @@
+/* ==================== MODAL STYLES ==================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-box {
+  background: var(--card-bg, #ffffff);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-box h2,
+.modal-box h3 {
+  margin: 0 0 16px 0;
+  color: var(--text-color, #1a1a1a);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.modal-box p {
+  margin: 0 0 24px 0;
+  color: var(--text-secondary, #666);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.modal-box .form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.modal-box label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-color, #333);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.modal-box input,
+.modal-box select,
+.modal-box textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: var(--input-bg, #ffffff);
+  color: var(--text-color, #1a1a1a);
+}
+
+.modal-box input:focus,
+.modal-box select:focus,
+.modal-box textarea:focus {
+  outline: none;
+  border-color: var(--accent, #6c21e4);
+  box-shadow: 0 0 0 3px rgba(108, 33, 228, 0.1);
+}
+
+.modal-box input.input-error {
+  border-color: #e74c3c;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+}
+
+.modal-actions .btn {
+  background: var(--accent, #6c21e4);
+  color: white;
+}
+
+.modal-actions .btn:hover:not(:disabled) {
+  background: var(--accent-dark, #5519b8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 33, 228, 0.3);
+}
+
+.modal-actions .btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-actions .btn-secondary {
+  background: transparent;
+  color: var(--text-color, #1a1a1a);
+  border: 2px solid var(--border-color, #e0e0e0);
+}
+
+.modal-actions .btn-secondary:hover {
+  background: var(--hover-bg, #f5f5f5);
+  border-color: var(--text-secondary, #999);
+}
+
+/* Dark mode support */
+.dark .modal-box {
+  background: var(--card-bg-dark, #2a2a2a);
+  color: var(--text-dark, #f0f0f0);
+}
+
+.dark .modal-box h2,
+.dark .modal-box h3 {
+  color: var(--text-dark, #f0f0f0);
+}
+
+.dark .modal-box label {
+  color: var(--text-dark, #f0f0f0);
+}
+
+.dark .modal-box input,
+.dark .modal-box select,
+.dark .modal-box textarea {
+  background: var(--input-bg-dark, #1a1a1a);
+  border-color: var(--border-dark, #444);
+  color: var(--text-dark, #f0f0f0);
+}
+
+.dark .modal-actions .btn-secondary {
+  color: var(--text-dark, #f0f0f0);
+  border-color: var(--border-dark, #444);
+}
+
+.dark .modal-actions .btn-secondary:hover {
+  background: var(--hover-bg-dark, #333);
+}
+
+/* Error messages */
+.error-msg {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 4px;
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-box {
+    padding: 24px;
+    width: 95%;
+  }
+  
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+    min-width: unset;
+  }
+}

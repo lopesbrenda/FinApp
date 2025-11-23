@@ -2,7 +2,7 @@
 import { auth } from "./firebase-config.js";
 import { getUserExpenses, addExpense, deleteExpense } from "./expenses.js";
 import { getUserGoals, addGoal, updateGoalAmount } from "./goals.js";
-import { addItem, getItems, deleteItem, updateItem } from "./firebase-db.js";
+import { USER_COLLECTION, addItem, getItems, deleteItem, updateItem } from "./firebase-dbs.js";
 import { showAlert } from "./utils/alerts.js";
 
 // Espera o usuário logado

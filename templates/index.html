@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <title>FinLife</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/modal.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/validators.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}">
+</head>
+<body>
+  <nav class="main-nav">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a class="brand" href="/home">FinLife 💜</a>
+      </div>
+      <div class="nav-right">
+        <a class="nav-link" href="/home" data-i18n="nav.home">Home</a>
+        <a class="nav-link" href="/dashboard" id="nav-dashboard" data-i18n="nav.dashboard" style="display:none;">Dashboard</a>
+        <a class="nav-link" href="/profile" id="nav-profile" data-i18n="nav.profile" style="display:none;">Profile</a>
+        <a class="nav-link" href="/settings" id="nav-settings" data-i18n="nav.settings" style="display:none;">Settings</a>
+        <button id="lang-toggle" class="theme-toggle-btn" aria-label="Toggle language">🇺🇸 EN</button>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">🌙</button>
+        <a class="nav-link" href="/login" id="nav-login" data-i18n="nav.login">Login</a>
+        <a class="nav-link" href="/signup" id="nav-signup" data-i18n="nav.signup">Sign Up</a>
+        <button class="nav-btn" id="logout-btn" data-i18n="nav.logout" style="display:none;">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"></script>
+
+  <script type="module" src="{{ url_for('static', filename='js/firebase/firebase-config.js') }}"></script>
+
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/services/user-preferences.js') }}" defer></script>
+  <script type="module" src="{{ url_for('static', filename='js/services/profile-service.js') }}" defer></script>
+
+  <script type="module">
+    import { i18n } from '{{ url_for("static", filename="js/i18n.js") }}';
+    import { themeManager } from '{{ url_for("static", filename="js/theme.js") }}';
+    
+    // Make globally available
+    window.i18n = i18n;
+    window.themeManager = themeManager;
+    
+    // Initialize sync if available
+    try {
+      const { initSync } = await import('{{ url_for("static", filename="js/sync.js") }}');
+      if (initSync) initSync();
+    } catch (e) {
+      console.log('Sync not available');
+    }
+  </script>
+
+</body>
+</html>

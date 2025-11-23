@@ -1,0 +1,438 @@
+/* ===============================
+   CSS CUSTOM PROPERTIES
+================================*/
+:root {
+  --card-bg: #ffffff;
+  --card-bg-dark: #2a2a2a;
+  --input-bg: #ffffff;
+  --input-bg-dark: #1a1a1a;
+  --border-color: #e0e0e0;
+  --border-dark: #444;
+  --text-color: #1a1a1a;
+  --text-dark: #f0f0f0;
+  --text-secondary: #666;
+  --accent: #6c21e4;
+  --accent-dark: #5519b8;
+  --hover-bg: #f5f5f5;
+  --hover-bg-dark: #333;
+}
+
+/* ===============================
+   GLOBAL STYLES
+================================*/
+* {
+  box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    background: #f7f8fb;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+    display: block;
+    padding-top: 80px;
+    width: 100%;
+    min-height: calc(100vh - 80px);
+}
+
+/* ===============================
+   NAVBAR
+================================*/
+.main-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;              
+    z-index: 999;             
+    padding: 0;
+    background: linear-gradient(90deg, #fff, #fbf8ff);
+    box-shadow: 0 2px 8px rgba(18, 18, 23, 0.06);
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 15px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.nav-left {
+    flex-shrink: 0;
+}
+
+.nav-left .brand {
+    font-weight: 700;
+    color: #6c21e4;
+    text-decoration: none;
+    font-size: 1.25rem;
+    display: inline-block;
+}
+
+.nav-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.nav-link {
+    color: #333;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.nav-link:hover {
+    background: rgba(108, 33, 228, 0.06);
+}
+
+.nav-btn {
+    background: #6c21e4;
+    color: #fff;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: auto;
+    min-width: 90px;
+    min-height: 44px;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.nav-btn:hover {
+    background: #5a19c7;
+}
+
+.theme-toggle-btn {
+    color: #6c21e4;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: transform 0.2s;
+    padding: 8px;
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+    transform: scale(1.15);
+}
+
+body.dark .theme-toggle-btn {
+    color: #ffd43b;
+}
+
+/* ===============================
+   GLOBAL CARD CONTAINER
+================================*/
+.card {
+    width: 95%;
+    max-width: 1200px;
+    margin: 28px auto;
+    padding: 24px;
+    background: #fff;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(12, 12, 20, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   RESPONSIVE CARD GRID
+================================*/
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 0 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-grid {
+        padding: 0 12px;
+        gap: 12px;
+    }
+}
+
+/* ===============================
+   FORMS AND INPUTS
+================================*/
+.form select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #e6e6ee;
+    font-size: 1rem;
+    min-height: 44px;
+}
+
+.form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #e6e6ee;
+    font-size: 1rem;
+    min-height: 44px;
+}
+
+.btn {
+    width: 100%;
+    padding: 14px;
+    background: #6c21e4;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    min-height: 48px;
+    transition: background 0.2s;
+}
+
+.btn:hover {
+    background: #5a19c7;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.card .btn,
+.form .btn {
+    width: 100%;
+}
+
+.btn-small {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    min-height: 32px;
+    border-radius: 6px;
+}
+
+.btn-danger {
+    background: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #d1d1d1;
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    min-height: 44px;
+    font-size: 1rem;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+body.dark .btn-secondary {
+    background: #2c2c2c;
+    color: #fff;
+    border-color: #444;
+}
+
+/* ===============================
+   DARK MODE
+================================*/
+body.dark {
+    background-color: #121212;
+    color: #eee;
+}
+
+body.dark .main-nav {
+    background: linear-gradient(90deg, #1a1a1a, #1e1a24);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+body.dark .nav-link {
+    color: #ddd;
+}
+
+body.dark .nav-link:hover {
+    background: rgba(155, 91, 255, 0.15);
+}
+
+body.dark .card {
+    background: #1e1e1e;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.05);
+}
+
+/* ===============================
+   ALERTS
+================================*/
+.alert {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    animation: fadeInOut 4s ease forwards;
+    z-index: 10000;
+    max-width: 90%;
+}
+
+.alert.info { background: #2196f3; }
+.alert.success { background: #4caf50; }
+.alert.error { background: #f44336; }
+.alert.warning { background: #ff9800; }
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, 20px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    90% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+
+/* ===============================
+   TABLET RESPONSIVE (iPad, tablets)
+================================*/
+@media (max-width: 1024px) {
+  .nav-container {
+    padding: 12px 16px;
+  }
+  
+  main {
+    padding-top: 70px;
+  }
+  
+  .card {
+    width: 96%;
+    padding: 20px;
+  }
+}
+
+/* ===============================
+   MOBILE RESPONSIVE (phones)
+================================*/
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  
+  .nav-left {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .nav-right {
+    width: 100%;
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .nav-link {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    flex: 0 1 auto;
+  }
+  
+  .nav-btn {
+    padding: 10px 16px;
+    min-width: 80px;
+    font-size: 0.9rem;
+  }
+  
+  main {
+    padding-top: 130px;
+  }
+  
+  .card {
+    width: 98%;
+    padding: 16px;
+    margin: 16px auto;
+  }
+  
+  .btn {
+    padding: 16px;
+    font-size: 1.05rem;
+    min-height: 50px;
+  }
+}
+
+/* ===============================
+   SMALL MOBILE (iPhone SE, small Android)
+================================*/
+@media (max-width: 480px) {
+  .nav-left .brand {
+    font-size: 1.1rem;
+  }
+  
+  .nav-link {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+  
+  .theme-toggle-btn {
+    font-size: 1.3rem;
+  }
+  
+  .nav-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    min-width: 70px;
+  }
+  
+  .card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+  
+  .alert {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}

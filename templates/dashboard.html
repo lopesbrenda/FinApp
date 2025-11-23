@@ -1,38 +1,69 @@
-<!-- @@ templates/dashboard.html-->
-
-{% extends "base/index.html" %}
+{% extends "index.html" %}
 {% block content %}
-<section class="card">
-  <h2>Dashboard</h2>
-  <p>Welcome back, <strong id="user-name"></strong>!</p>
-  <p>Email: <span id="user-email"></span></p>
-  <p>This is your personal finance dashboard. 💜</p>
+<div class="card">
+  <h1 data-i18n="dashboard.title">📊 Financial Dashboard</h1>
+  <p data-i18n="dashboard.subtitle">Overview of your finances</p>
+  <p style="margin-top: 10px; color: #666;">
+    <span data-i18n="dashboard.welcome">Welcome</span>, <strong id="user-name">User</strong>
+  </p>
+</div>
 
-  <div class="dashboard-grid">
-    <div class="card">
-      <h3>💰 Current Balance</h3>
-      <p id="balance-amount">$0.00</p>
-    </div>
-
-    <div class="card">
-      <h3>📉 Monthly Expenses</h3>
-      <p id="expenses-amount">$0.00</p>
-    </div>
-
-    <div class="card">
-      <h3>🎯 Savings Goals</h3>
-      <p id="goals-progress">No goals yet</p>
-    </div>
+<div class="card-grid">
+  <div class="card">
+    <h3 data-i18n="dashboard.balance">💰 Total Balance</h3>
+    <h2 id="balance-amount" style="color: var(--accent, #6c21e4); margin: 16px 0;">$0.00</h2>
+  </div>
+  
+  <div class="card">
+    <h3 data-i18n="dashboard.expenses">📉 Expenses</h3>
+    <h2 id="expenses-amount" style="color: #f44336; margin: 16px 0;">$0.00</h2>
+  </div>
+  
+  <div class="card">
+    <h3 data-i18n="dashboard.income">📈 Income</h3>
+    <h2 id="income-amount" style="color: #4caf50; margin: 16px 0;">$0.00</h2>
   </div>
 
-  <canvas id="expenses-chart" width="400" height="180"></canvas>
-
-  <div class="dashboard-actions" style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
-    <button id="add-expense" class="btn">+ Add Expense</button>
-    <button id="add-goal" class="btn">+ Add Goal</button>
+  <div class="card">
+    <h3 data-i18n="dashboard.goals">🎯 Goals</h3>
+    <h2 id="goals-amount" style="color: #2196F3; margin: 16px 0;">$0.00</h2>
   </div>
-</section>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<div class="card" style="max-width: 1200px; margin: 20px auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 data-i18n="dashboard.transactions">Recent Transactions</h2>
+    <div style="display: flex; gap: 10px;">
+      <button id="add-income" class="btn" style="background: #4caf50;">
+        <span data-i18n="dashboard.addIncome">+ Income</span>
+      </button>
+      <button id="add-expense" class="btn" style="background: #f44336;">
+        <span data-i18n="dashboard.addExpense">+ Expense</span>
+      </button>
+      <button id="add-goal" class="btn" style="background: #2196F3;">
+        <span data-i18n="dashboard.addGoal">+ Goal</span>
+      </button>
+      <button id="contribute-goal" class="btn" style="background: #1976D2;">
+        <span data-i18n="dashboard.contributeGoal">💰 Contribute</span>
+      </button>
+    </div>
+  </div>
+  
+  <div id="expenses-list" style="text-align: left; margin-top: 20px;">
+    <p style="color: #999; text-align: center; padding: 40px;">
+      <span data-i18n="dashboard.noTransactions">No transactions yet. Click + Income or + Expense to start!</span>
+    </p>
+  </div>
+</div>
+
+<div class="card" style="max-width: 1200px; margin: 20px auto;">
+  <h2 data-i18n="dashboard.myGoals">My Goals</h2>
+  <div id="goals-list" style="margin-top: 20px;">
+    <p style="color: #999; text-align: center; padding: 40px;">
+      <span data-i18n="dashboard.noGoals">No goals yet. Click + Goal to create one!</span>
+    </p>
+  </div>
+</div>
+
+<script type="module" src="/static/js/pages/dashboard.js"></script>
 {% endblock %}

@@ -1,22 +1,173 @@
-<!-- @@ templates/profile.html-->
-
-{% extends "base/index.html" %}
+{% extends "index.html" %}
 {% block content %}
-<section class="page profile">
-  <h2>👤 Meu Perfil</h2>
-  <div class="profile-card">
-    <p><strong>Nome:</strong> <span id="profile-name">...</span></p>
-    <p><strong>Email:</strong> <span id="profile-email">...</span></p>
-    <p><strong>Criado em:</strong> <span id="profile-created">...</span></p>
+<link rel="stylesheet" href="{{ url_for('static', filename='style/profile.css') }}">
+
+<div class="profile-page">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <img
+        id="sidebar-avatar"
+        class="sidebar-avatar"
+        src="{{ url_for('static', filename='images/avatar-default.png') }}"
+        alt="avatar"
+        style="cursor: pointer;"
+      />
+      
+      <input type="file" id="avatar-input" accept="image/*" style="display:none">
+      
+      <div class="sidebar-user">
+        <div id="sidebar-name"><span id="profile-name">...</span></div>
+        <div id="sidebar-email" class="muted"><span data-i18n="profile.since">Since:</span> <span id="profile-created">...</span></div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" role="navigation" aria-label="Profile navigation">
+      <button class="sidebar-link active" data-target="profile-panel" data-i18n="sidebar.profile">
+        Profile
+      </button>
+      <button class="sidebar-link" data-target="settings-panel" data-i18n="sidebar.settings">
+        Settings
+      </button>
+      <button class="sidebar-link" data-target="password-panel" data-i18n="sidebar.password">
+        Password
+      </button>
+    </nav>
+  </aside>
+
+  <div class="main-area">
+    
+    <header class="main-header">
+      <h1 id="page-title" data-i18n="profile.title">👤 Profile Details</h1>
+      <div id="mini-loader" class="mini-loader" aria-hidden="true"></div>
+    </header>
+    
+    <section id="profile-panel" class="panel active">
+      
+      <div class="card">
+        <h3 data-i18n="profile.edit">✏️ Edit Information</h3>
+        <form id="profile-form">
+          <label class="form-label" for="edit-name" data-i18n="profile.fullname">Full name</label>
+          <input id="edit-name" type="text" />
+
+          <label class="form-label" for="edit-phone" data-i18n="profile.phone">Phone</label>
+          <input id="edit-phone" type="text" />
+
+          <label class="form-label" for="edit-email" data-i18n="profile.email">Email</label>
+          <input id="edit-email" type="email" />
+
+          <div class="form-actions">
+            <button type="submit" class="btn" data-i18n="profile.save">Save</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="settings-panel" class="panel">
+      <div class="card page settings">
+        <h2 data-i18n="settings.title">⚙️ Settings</h2>
+        <form id="settings-form">
+          
+          <h3 style="margin: 24px 0 16px; font-size: 18px; color: var(--text-color);" data-i18n="settings.general">💼 General</h3>
+          
+          <label class="form-label" data-i18n="settings.currency">Default Currency</label>
+          <div class="custom-select" id="currency-select-box">
+            <div
+              class="currency-select-trigger"
+              id="currency-select-trigger"
+              tabindex="0"
+              role="combobox"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            >
+              <span id="currency-selected">EUR (€)</span>
+              <i class="arrow">▼</i>
+            </div>
+            <div
+              class="custom-options"
+              role="listbox"
+              aria-labelledby="currency-select-trigger"
+            >
+              <div class="custom-option" data-value="EUR">EUR (€)</div>
+              <div class="custom-option" data-value="USD">USD ($)</div>
+              <div class="custom-option" data-value="BRL">BRL (R$)</div>
+              <div class="custom-option" data-value="GBP">GBP (£)</div>
+            </div>
+          </div>
+          <input type="hidden" id="currency-select" name="defaultCurrency" />
+          
+          <label class="form-label" for="language-select" data-i18n="settings.language">Language</label>
+          <select id="language-select" name="language" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--border-color, #e0e0e0);">
+            <option value="en">🇺🇸 English</option>
+            <option value="pt">🇧🇷 Português</option>
+          </select>
+          
+          <h3 style="margin: 32px 0 16px; font-size: 18px; color: var(--text-color);" data-i18n="settings.notifications">🔔 Notifications</h3>
+          
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span data-i18n="settings.alerts.expenses">Expense Alerts</span>
+            <input type="checkbox" id="alert-expenses" name="alertExpenses" class="switch" />
+          </label>
+
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span data-i18n="settings.alerts.goals">Goal Alerts</span>
+            <input type="checkbox" id="alert-goals" name="alertGoals" class="switch" />
+          </label>
+          
+          <h3 style="margin: 32px 0 16px; font-size: 18px; color: var(--text-color);" data-i18n="settings.privacy">🔒 Privacy</h3>
+          
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span data-i18n="settings.twofa">Two-Factor Authentication</span>
+            <input type="checkbox" id="two-factor" name="twoFactor" class="switch" disabled />
+          </label>
+          <small style="color: var(--text-secondary, #999); font-size: 13px; display: block; margin-top: -8px;" data-i18n="settings.twofa.soon">(Coming soon)</small>
+          
+          <div class="form-actions" style="margin-top: 32px;">
+            <button type="submit" class="btn" data-i18n="settings.save">Save Settings</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="password-panel" class="panel">
+      <div class="card">
+      <h2 data-i18n="password.title">🔒 Change Password</h2>
+      <form id="password-form">
+      <label class="form-label" for="edit-pass" data-i18n="password.new">New password</label>
+      <div class="password-field">
+      <input id="edit-pass" type="password" autocomplete="new-password" />
+      <button type="button" class="eye-btn toggle-pass" data-target="edit-pass" aria-label="Toggle password">🙉</button>
+      </div>
+
+      <label class="form-label" for="edit-pass-confirm" data-i18n="password.confirm">Confirm new password</label>
+      <div class="password-field">
+      <input id="edit-pass-confirm" type="password" autocomplete="new-password" />
+      <button type="button" class="eye-btn toggle-pass" data-target="edit-pass-confirm" aria-label="Toggle password confirm">🙉</button>
+      </div>
+
+      <div class="form-actions">
+      <button type="submit" class="btn" data-i18n="password.change">Change Password</button>
+      </div>
+      </form>
+      </div>
+    </section>
+
   </div>
+</div>
 
-  <h3>Editar Dados</h3>
-  <form id="profile-form">
-    <label>Nome:</label>
-    <input type="text" id="edit-name" placeholder="Seu nome completo" required>
-    <button type="submit">💾 Salvar Alterações</button>
-  </form>
-</section>
-<script type="module" src="{{ url_for('static', filename='js/profile.js') }}"></script>
+<div id="avatar-loader" class="loader hidden"></div>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<div id="crop-modal" class="modal hidden">
+  <div class="modal-content">
+    <h3 data-i18n="modal.crop.title">Crop Image</h3>
+    <img id="crop-image" style="max-width:100%; display:block; margin:auto;">
+    
+    <button id="crop-confirm" class="btn btn-primary" data-i18n="modal.crop.use">Use Image</button>
+    <button id="crop-cancel" class="btn btn-danger" data-i18n="modal.crop.cancel">Cancel</button>
+  </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/pages/profile.js') }}" defer></script>
 {% endblock %}
-

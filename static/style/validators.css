@@ -1,0 +1,20 @@
+/* Form validation styles */
+.error {
+  color: #f44336;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.success {
+  color: #4caf50;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+input.invalid {
+  border-color: #f44336 !important;
+}
+
+input.valid {
+  border-color: #4caf50 !important;
+}

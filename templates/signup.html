@@ -1,26 +1,20 @@
-<!-- @@ templates/sigup.html-->
-{% extends "base/index.html" %}
+{% extends "index.html" %}
 {% block content %}
-<section class="card">
-  <h2>Create an Account</h2>
-  <form id="signup-form" class="form">
-
-    <input type="text" id="signup-full-name" placeholder="Full Name" required />
-    <input type="email" id="signup-email" placeholder="Email" required />
-
-    <div class="password-field">
-      <input type="password" id="signup-password" placeholder="Password" required />
-      <button type="button" id="toggle-signup-password" class="eye-btn">👁️</button>
-    </div>
-
-    <div class="password-field">
-      <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required />
-      <button type="button" id="toggle-signup-confirm" class="eye-btn">👁️</button>
-    </div>
-    
-    <button type="submit" class="btn">Sign up</button>
+<div class="card" style="max-width: 450px; margin: 40px auto;">
+  <h1 data-i18n="signup.title">✨ Create Account</h1>
+  <p data-i18n="signup.subtitle">Start managing your finances today</p>
+  
+  <form class="form" style="margin-top: 30px;">
+    <input type="text" data-i18n="signup.name.placeholder" placeholder="Full name" autocomplete="name" required />
+    <input type="email" data-i18n="signup.email.placeholder" placeholder="Email" autocomplete="email" required />
+    <input type="password" data-i18n="signup.password.placeholder" placeholder="Password" autocomplete="new-password" required />
+    <input type="password" data-i18n="signup.confirm.placeholder" placeholder="Confirm password" autocomplete="new-password" required />
+    <button type="submit" class="btn" data-i18n="signup.submit">Create Account</button>
   </form>
-  <p>Already have an account? <a href="/login">Login</a></p>
-</section>
-<script type="module" src="/static/js/app.js"></script>
+  
+  <p style="margin-top: 20px;">
+    <span data-i18n="signup.hasaccount">Already have an account?</span> 
+    <a href="/login" style="color: var(--accent, #6c21e4); font-weight: 600;" data-i18n="signup.login">Sign in</a>
+  </p>
+</div>
 {% endblock %}
