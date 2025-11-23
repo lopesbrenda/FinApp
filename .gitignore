@@ -1,0 +1,8 @@
+/__pycache__
+/node_modules
+start.sh
+package-lock.json
+package.json
+.env
+/venv
+firebase_service_account.json

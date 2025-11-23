@@ -1,0 +1,22 @@
+<!-- @@ templates/profile.html-->
+
+{% extends "base/index.html" %}
+{% block content %}
+<section class="page profile">
+  <h2>👤 Meu Perfil</h2>
+  <div class="profile-card">
+    <p><strong>Nome:</strong> <span id="profile-name">...</span></p>
+    <p><strong>Email:</strong> <span id="profile-email">...</span></p>
+    <p><strong>Criado em:</strong> <span id="profile-created">...</span></p>
+  </div>
+
+  <h3>Editar Dados</h3>
+  <form id="profile-form">
+    <label>Nome:</label>
+    <input type="text" id="edit-name" placeholder="Seu nome completo" required>
+    <button type="submit">💾 Salvar Alterações</button>
+  </form>
+</section>
+<script type="module" src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
+

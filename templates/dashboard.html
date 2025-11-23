@@ -1,0 +1,38 @@
+<!-- @@ templates/dashboard.html-->
+
+{% extends "base/index.html" %}
+{% block content %}
+<section class="card">
+  <h2>Dashboard</h2>
+  <p>Welcome back, <strong id="user-name"></strong>!</p>
+  <p>Email: <span id="user-email"></span></p>
+  <p>This is your personal finance dashboard. 💜</p>
+
+  <div class="dashboard-grid">
+    <div class="card">
+      <h3>💰 Current Balance</h3>
+      <p id="balance-amount">$0.00</p>
+    </div>
+
+    <div class="card">
+      <h3>📉 Monthly Expenses</h3>
+      <p id="expenses-amount">$0.00</p>
+    </div>
+
+    <div class="card">
+      <h3>🎯 Savings Goals</h3>
+      <p id="goals-progress">No goals yet</p>
+    </div>
+  </div>
+
+  <canvas id="expenses-chart" width="400" height="180"></canvas>
+
+  <div class="dashboard-actions" style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+    <button id="add-expense" class="btn">+ Add Expense</button>
+    <button id="add-goal" class="btn">+ Add Goal</button>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

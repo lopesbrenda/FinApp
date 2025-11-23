@@ -1,0 +1,42 @@
+
+<!-- @@ templates/base/index.html-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FinLife 💜</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}">
+</head>
+<body>
+  <nav class="main-nav">
+    <div class="nav-left">
+      <a class="brand" href="/home">FinLife</a>
+    </div>
+    <div class="nav-right">
+      <a class="nav-link" href="/home">Home</a>
+      <a class="nav-link" href="/dashboard" id="nav-dashboard" style="display:none;">Dashboard</a>
+      <a class="nav-link" href="/profile" id="nav-profile" style="display:none;">Profile</a>
+      <a class="nav-link" href="/settings" id="nav-settings" style="display:none;">Settings</a>
+      <button id="theme-toggle" class="theme-toggle-btn">🌞</button>
+      <a class="nav-link" href="/login" id="nav-login">Login</a>
+      <a class="nav-link" href="/signup" id="nav-signup">Signup</a>
+      <button class="nav-btn" id="logout-btn" style="display:none;">Logout</button>
+    </div>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Firebase SDK -->
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"></script>
+
+  <!-- dynamic firebase config and app logic -->
+  <script type="module" src="/firebase-config.js"></script>
+  <script type="module" src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

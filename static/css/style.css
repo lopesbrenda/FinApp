@@ -1,0 +1,263 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  background: #f7f8fb;
+  margin: 0;
+}
+
+main {
+  display: flex;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+
+.main-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: linear-gradient(90deg,#fff,#fbf8ff);
+  box-shadow: 0 2px 8px rgba(18,18,23,0.04);
+}
+
+.nav-left .brand {
+  font-weight: 700;
+  color: #6c21e4;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.nav-right {
+  display:flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.nav-link {
+  color: #333;
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.nav-link:hover {
+  background: rgba(108,33,228,0.06);
+}
+
+.nav-btn {
+  background: #6c21e4;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.card {
+  max-width: 720px;
+  margin: 28px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(12,12,20,0.04);
+}
+
+.form input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #e6e6ee;
+}
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  background: #6c21e4;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* password field and eye button */
+.password-field {
+  position: relative;
+}
+.password-field input {
+  width: 100%;
+  padding-right: 44px;
+}
+.eye-btn {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+
+/*------*/
+.login-container {
+  width: 350px;
+  background: white;
+  padding: 28px;
+  border-radius: 20px;
+  box-shadow: 0px 8px 20px rgba(0,0,0,0.06);
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: #8a00e6;
+  color: white;
+  font-weight: bold;
+  border: none;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 10px;
+  top: 6px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.nav-btn:hover {
+  background: #5a19c7;
+}
+
+a.nav-link.active {
+  background: rgba(108,33,228,0.1);
+  font-weight: 600;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+  background: #222;
+  padding: 1rem;
+}
+nav a, nav button {
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Switch style */
+.switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #ccc;
+  outline: none;
+  border-radius: 26px;
+  transition: background 0.3s;
+  cursor: pointer;
+}
+.switch:checked {
+  background-color: #6c21e4;
+}
+.switch::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  background: white;
+  transition: 0.3s;
+}
+.switch:checked::before {
+  transform: translateX(24px);
+}
+
+/* Dark Mode */
+body.dark {
+  background-color: #121212;
+  color: #eee;
+}
+body.dark .card {
+  background: #1e1e1e;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(255,255,255,0.05);
+}
+body.dark .nav-link {
+  color: #ddd;
+}
+body.dark .main-nav {
+  background: linear-gradient(90deg, #1b1b1b, #2a2a2a);
+}
+/* theme icon button */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.2s;
+}
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
+}
+body.dark .theme-toggle-btn {
+  color: #ffd43b; /* moon glow */
+}
+
+
+/* Alerts */
+.alert {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  animation: fadeInOut 4s ease forwards;
+}
+
+.alert.info { background: #2196f3; }
+.alert.success { background: #4caf50; }
+.alert.error { background: #f44336; }
+.alert.warning { background: #ff9800; }
+
+@keyframes fadeInOut {
+  0% { opacity: 0; bottom: 0; }
+  10% { opacity: 1; bottom: 20px; }
+  90% { opacity: 1; bottom: 20px; }
+  100% { opacity: 0; bottom: 0; }
+}
