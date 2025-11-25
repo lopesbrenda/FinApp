@@ -8,6 +8,8 @@ import { COLLECTION } from "../firebase/firebase-dbs.js";
 import { expandRecurringTransactions, getRecurringLabel } from "../utils/recurring-transactions.js";
 import { checkGoalNotifications } from "../utils/goal-notifications.js";
 import { checkExpenseNotifications } from "../utils/expense-notifications.js";
+import { showGoalCompletionModal } from "../utils/goal-completion-modal.js";
+import { i18n } from "../i18n.js";
 
 function getCurrencySymbol(currency) {
   const symbols = {
@@ -332,9 +334,21 @@ if (contributeGoalBtn) {
             return false;
           }
 
-          await addContribution(goalId, amount);
+          const result = await addContribution(goalId, amount);
           await refreshDashboard();
           showAlert("Contribution added!", "success");
+          
+          if (result.justCompleted) {
+            const goal = window.goals.find(g => g.id === goalId);
+            if (goal) {
+              setTimeout(() => {
+                showGoalCompletionModal(goal, async (action) => {
+                  await refreshDashboard();
+                });
+              }, 500);
+            }
+          }
+          
           return true;
         } catch (err) {
           console.error("Error adding contribution:", err);
@@ -372,8 +386,6 @@ auth.onAuthStateChanged(async (user) => {
   });
 });
 
-let hasCheckedNotifications = false;
-
 async function refreshDashboard() {
   try {
     const userId = auth.currentUser.uid;
@@ -388,22 +400,21 @@ async function refreshDashboard() {
 
     renderExpensesList(expenses);
     renderGoalsList(goals);
+    renderCompletedGoals(goals);
+    renderArchivedGoals(goals);
     updateBalance(expenses, goals);
     updateSummary(expenses, goals);
 
-    if (!hasCheckedNotifications) {
-      hasCheckedNotifications = true;
-      setTimeout(() => {
-        if (goals.length > 0) {
-          checkGoalNotifications(goals, window.userPreferences);
-        }
-        if (expenses.length > 0) {
-          setTimeout(() => {
-            checkExpenseNotifications(expenses, window.userPreferences);
-          }, 500);
-        }
-      }, 1000);
-    }
+    setTimeout(() => {
+      if (goals.length > 0) {
+        checkGoalNotifications(goals, window.userPreferences);
+      }
+      if (expenses.length > 0) {
+        setTimeout(() => {
+          checkExpenseNotifications(expenses, window.userPreferences);
+        }, 500);
+      }
+    }, 1000);
   } catch (err) {
     console.error("Failed to refresh dashboard:", err);
     showAlert("Failed to refresh dashboard.", "error");
@@ -544,7 +555,14 @@ function renderGoalsList(goals = []) {
 
   container.innerHTML = "";
 
-  if (!goals.length) {
+  const activeGoals = goals.filter(g => {
+    const current = safeNumber(g.currentAmount);
+    const target = safeNumber(g.targetAmount);
+    const isCompleted = current >= target;
+    return !g.archived && !isCompleted;
+  });
+
+  if (!activeGoals.length) {
     container.innerHTML = `
       <p style="color: #999; text-align: center; padding: 40px;">
         <span data-i18n="dashboard.noGoals">No goals yet. Click + Goal to create one!</span>
@@ -553,10 +571,11 @@ function renderGoalsList(goals = []) {
     return;
   }
 
-  goals.forEach(goal => {
+  activeGoals.forEach(goal => {
     const current = safeNumber(goal.currentAmount);
     const target = safeNumber(goal.targetAmount);
     const progress = target > 0 ? (current / target) * 100 : 0;
+    const isCompleted = false;
     
     let dueDateStr = "No date set";
     if (goal.dueDate) {
@@ -570,7 +589,12 @@ function renderGoalsList(goals = []) {
     }
 
     const div = document.createElement("div");
-    div.style.cssText = "border: 1px solid #eee; border-radius: 8px; padding: 16px; margin-bottom: 16px;";
+    div.style.cssText = `border: 1px solid #eee; border-radius: 8px; padding: 16px; margin-bottom: 16px;`;
+    
+    const actionButtons = `
+      <button class="btn-small" data-id="${goal.id}" data-action="edit" style="background: #6c21e4; color: white; cursor: pointer;">Edit</button>
+      <button class="btn-small btn-danger" data-id="${goal.id}" data-action="delete" style="cursor: pointer;">Delete</button>
+    `;
     
     div.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -578,19 +602,144 @@ function renderGoalsList(goals = []) {
           <strong>🎯 ${goal.title}</strong>
           <p style="color: #666; font-size: 0.9rem; margin: 4px 0;">Due: ${dueDateStr}</p>
         </div>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn-small" data-id="${goal.id}" data-action="edit" style="background: #6c21e4; color: white;">Edit</button>
-          <button class="btn-small btn-danger" data-id="${goal.id}" data-action="delete">Delete</button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${actionButtons}
         </div>
       </div>
       <div style="margin-bottom: 8px;">
         <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
-          <div style="background: #2196F3; height: 100%; width: ${progress}%;"></div>
+          <div style="background: #2196F3; height: 100%; width: ${Math.min(progress, 100)}%;"></div>
         </div>
       </div>
       <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
         <span>${symbol} ${current.toFixed(2)} / ${symbol} ${target.toFixed(2)}</span>
-        <span>${progress.toFixed(0)}%</span>
+        <span>${Math.min(progress, 100).toFixed(0)}%</span>
+      </div>
+    `;
+    
+    container.appendChild(div);
+  });
+
+  container.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.dataset.id;
+      const action = e.target.dataset.action;
+      const goal = goals.find(g => g.id === id);
+      
+      if (action === "edit") {
+        if (goal) {
+          await handleEditGoal(goal);
+        }
+      } else if (action === "delete") {
+        try {
+          await deleteGoal(id);
+          await refreshDashboard();
+          showAlert("Goal deleted!", "success");
+        } catch (err) {
+          console.error("Error deleting goal:", err);
+          showAlert("Failed to delete goal.", "error");
+        }
+      } else if (action === "mark-achieved") {
+        try {
+          const { markAsAchieved } = await import('../goals.js');
+          await markAsAchieved(id);
+          await refreshDashboard();
+          showAlert(i18n.t('goal_archived_success'), 'success');
+        } catch (err) {
+          console.error("Error marking goal as achieved:", err);
+          showAlert(i18n.t('goal_archived_error'), 'error');
+        }
+      } else if (action === "restart") {
+        try {
+          const { restartGoal } = await import('../goals.js');
+          await restartGoal(id);
+          await refreshDashboard();
+          showAlert(i18n.t('goal_restarted_success'), 'success');
+        } catch (err) {
+          console.error("Error restarting goal:", err);
+          showAlert(i18n.t('goal_restarted_error'), 'error');
+        }
+      } else if (action === "archive") {
+        try {
+          const { archiveGoal } = await import('../goals.js');
+          await archiveGoal(id);
+          await refreshDashboard();
+          showAlert(i18n.t('goal_archived_success'), 'success');
+        } catch (err) {
+          console.error("Error archiving goal:", err);
+          showAlert(i18n.t('goal_archived_error'), 'error');
+        }
+      }
+    });
+  });
+}
+
+function renderCompletedGoals(goals = []) {
+  const symbol = getCurrencySymbol(window.currency);
+  const container = document.getElementById("completed-goals-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const completedGoals = goals.filter(g => {
+    const current = safeNumber(g.currentAmount);
+    const target = safeNumber(g.targetAmount);
+    const isCompleted = current >= target;
+    return isCompleted && !g.archived;
+  });
+
+  if (!completedGoals.length) {
+    container.innerHTML = `
+      <p style="color: #999; text-align: center; padding: 40px;">
+        <span data-i18n="no_completed_goals">No completed goals yet. Complete your first goal to see it here!</span>
+      </p>
+    `;
+    return;
+  }
+
+  completedGoals.forEach(goal => {
+    const current = safeNumber(goal.currentAmount);
+    const target = safeNumber(goal.targetAmount);
+    const progress = target > 0 ? (current / target) * 100 : 0;
+    
+    let completedDateStr = "Unknown";
+    if (goal.completedAt) {
+      completedDateStr = new Date(goal.completedAt).toLocaleDateString();
+    } else if (goal.archivedAt) {
+      completedDateStr = new Date(goal.archivedAt).toLocaleDateString();
+    }
+    
+    let timeToComplete = "Unknown";
+    if (goal.createdAt && goal.completedAt) {
+      const created = goal.createdAt.seconds ? new Date(goal.createdAt.seconds * 1000) : new Date(goal.createdAt);
+      const completed = new Date(goal.completedAt);
+      const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
+      timeToComplete = `${days} ${days === 1 ? i18n.t('day') : i18n.t('days')}`;
+    }
+
+    const div = document.createElement("div");
+    div.style.cssText = "border: 1px solid #27ae60; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: linear-gradient(135deg, #f0fff4 0%, #e8f8f0 100%);";
+    
+    div.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div>
+          <strong>✅ ${goal.title}</strong>
+          <p style="color: #27ae60; font-size: 0.85rem; font-weight: 600; margin: 4px 0;">🎉 Goal Completed!</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-small" data-id="${goal.id}" data-action="mark-achieved" style="background: #27ae60; color: white; cursor: pointer;" data-i18n="mark_as_achieved">Mark as Achieved</button>
+          <button class="btn-small" data-id="${goal.id}" data-action="restart" style="background: #e67e22; color: white; cursor: pointer;" data-i18n="restart_goal">Restart</button>
+          <button class="btn-small" data-id="${goal.id}" data-action="archive" style="background: #3498db; color: white; cursor: pointer;" data-i18n="archive_goal">Archive</button>
+        </div>
+      </div>
+      <div style="margin-bottom: 8px;">
+        <div style="background: #c8e6c9; height: 8px; border-radius: 4px; overflow: hidden;">
+          <div style="background: #27ae60; height: 100%; width: ${Math.min(progress, 100)}%;"></div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
+        <span>${symbol} ${current.toFixed(2)} / ${symbol} ${target.toFixed(2)}</span>
+        <span>${Math.min(progress, 100).toFixed(0)}%</span>
       </div>
     `;
     
@@ -602,10 +751,126 @@ function renderGoalsList(goals = []) {
       const id = e.target.dataset.id;
       const action = e.target.dataset.action;
       
-      if (action === "edit") {
-        const goal = goals.find(g => g.id === id);
-        if (goal) {
-          await handleEditGoal(goal);
+      if (action === "mark-achieved") {
+        try {
+          const { markAsAchieved } = await import('../goals.js');
+          await markAsAchieved(id);
+          await refreshDashboard();
+          showAlert(i18n.t('goal_archived_success'), 'success');
+        } catch (err) {
+          console.error("Error marking goal as achieved:", err);
+          showAlert(i18n.t('goal_archived_error'), 'error');
+        }
+      } else if (action === "restart") {
+        try {
+          const { restartGoal } = await import('../goals.js');
+          await restartGoal(id);
+          await refreshDashboard();
+          showAlert(i18n.t('goal_restarted_success'), 'success');
+        } catch (err) {
+          console.error("Error restarting goal:", err);
+          showAlert(i18n.t('goal_restarted_error'), 'error');
+        }
+      } else if (action === "archive") {
+        try {
+          const { archiveGoal } = await import('../goals.js');
+          await archiveGoal(id);
+          await refreshDashboard();
+          showAlert(i18n.t('goal_archived_success'), 'success');
+        } catch (err) {
+          console.error("Error archiving goal:", err);
+          showAlert(i18n.t('goal_archived_error'), 'error');
+        }
+      }
+    });
+  });
+}
+
+function renderArchivedGoals(goals = []) {
+  const symbol = getCurrencySymbol(window.currency);
+  const container = document.getElementById("archived-goals-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const archivedGoals = goals.filter(g => g.archived);
+
+  if (!archivedGoals.length) {
+    container.innerHTML = `
+      <p style="color: #999; text-align: center; padding: 40px;">
+        <span data-i18n="no_archived_goals">No archived goals yet. Archive a completed goal to see it here!</span>
+      </p>
+    `;
+    return;
+  }
+
+  archivedGoals.forEach(goal => {
+    const current = safeNumber(goal.currentAmount);
+    const target = safeNumber(goal.targetAmount);
+    const progress = target > 0 ? (current / target) * 100 : 0;
+    
+    let completedDateStr = "Unknown";
+    if (goal.completedAt) {
+      completedDateStr = new Date(goal.completedAt).toLocaleDateString();
+    } else if (goal.archivedAt) {
+      completedDateStr = new Date(goal.archivedAt).toLocaleDateString();
+    }
+    
+    let timeToComplete = "Unknown";
+    if (goal.createdAt && goal.completedAt) {
+      const created = goal.createdAt.seconds ? new Date(goal.createdAt.seconds * 1000) : new Date(goal.createdAt);
+      const completed = new Date(goal.completedAt);
+      const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
+      timeToComplete = `${days} ${days === 1 ? i18n.t('day') : i18n.t('days')}`;
+    }
+
+    const div = document.createElement("div");
+    div.style.cssText = "border: 1px solid #95a5a6; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: linear-gradient(135deg, #f8f9fa 0%, #ecf0f1 100%); opacity: 0.85;";
+    
+    div.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div>
+          <strong>📁 ${goal.title}</strong>
+          <p style="color: #666; font-size: 0.85rem; margin: 4px 0;">
+            <span data-i18n="completed_on">Completed on</span>: ${completedDateStr}
+          </p>
+          <p style="color: #666; font-size: 0.85rem; margin: 4px 0;">
+            <span data-i18n="time_to_complete">Time to complete</span>: ${timeToComplete}
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-small" data-id="${goal.id}" data-action="unarchive" style="background: #3498db; color: white; cursor: pointer;" data-i18n="unarchive">Unarchive</button>
+          <button class="btn-small btn-danger" data-id="${goal.id}" data-action="delete" style="cursor: pointer;">Delete</button>
+        </div>
+      </div>
+      <div style="margin-bottom: 8px;">
+        <div style="background: #d5dbdb; height: 8px; border-radius: 4px; overflow: hidden;">
+          <div style="background: #7f8c8d; height: 100%; width: ${Math.min(progress, 100)}%;"></div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
+        <span>${symbol} ${current.toFixed(2)} / ${symbol} ${target.toFixed(2)}</span>
+        <span>${Math.min(progress, 100).toFixed(0)}%</span>
+      </div>
+    `;
+    
+    container.appendChild(div);
+  });
+
+  container.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.dataset.id;
+      const action = e.target.dataset.action;
+      
+      if (action === "unarchive") {
+        try {
+          const { unarchiveGoal } = await import('../goals.js');
+          await unarchiveGoal(id);
+          await refreshDashboard();
+          showAlert(i18n.t('goal_restarted_success'), 'success');
+        } catch (err) {
+          console.error("Error unarchiving goal:", err);
+          showAlert(i18n.t('goal_restarted_error'), 'error');
         }
       } else if (action === "delete") {
         try {
@@ -620,3 +885,31 @@ function renderGoalsList(goals = []) {
     });
   });
 }
+
+document.querySelectorAll('.goal-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.dataset.tab;
+    
+    document.querySelectorAll('.goal-tab').forEach(t => {
+      t.classList.remove('active');
+      t.style.color = '#999';
+      t.style.borderBottomColor = 'transparent';
+    });
+    
+    tab.classList.add('active');
+    tab.style.color = '#6c21e4';
+    tab.style.borderBottomColor = '#6c21e4';
+    
+    document.querySelectorAll('.goals-tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    
+    if (tabName === 'active') {
+      document.getElementById('active-goals-container').style.display = 'block';
+    } else if (tabName === 'completed') {
+      document.getElementById('completed-goals-container').style.display = 'block';
+    } else if (tabName === 'archived') {
+      document.getElementById('archived-goals-container').style.display = 'block';
+    }
+  });
+});

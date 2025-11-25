@@ -57,13 +57,66 @@
 </div>
 
 <div class="card" style="max-width: 1200px; margin: 20px auto;">
-  <h2 data-i18n="dashboard.myGoals">My Goals</h2>
-  <div id="goals-list" style="margin-top: 20px;">
-    <p style="color: #999; text-align: center; padding: 40px;">
-      <span data-i18n="dashboard.noGoals">No goals yet. Click + Goal to create one!</span>
-    </p>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 data-i18n="dashboard.myGoals">My Goals</h2>
+  </div>
+  
+  <div class="goals-tabs" style="border-bottom: 2px solid #eee; margin-bottom: 20px;">
+    <button class="goal-tab active" data-tab="active" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; color: #6c21e4; border-bottom: 3px solid #6c21e4; transition: all 0.2s;">
+      <span data-i18n="active_goals">Active Goals</span>
+    </button>
+    <button class="goal-tab" data-tab="completed" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; color: #999; border-bottom: 3px solid transparent; transition: all 0.2s;">
+      <span data-i18n="completed_goals">Completed Goals</span>
+    </button>
+    <button class="goal-tab" data-tab="archived" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; color: #999; border-bottom: 3px solid transparent; transition: all 0.2s;">
+      <span data-i18n="archived_goals">Archived Goals</span>
+    </button>
+  </div>
+  
+  <div id="active-goals-container" class="goals-tab-content" style="display: block;">
+    <div id="goals-list" style="margin-top: 20px;">
+      <p style="color: #999; text-align: center; padding: 40px;">
+        <span data-i18n="dashboard.noGoals">No goals yet. Click + Goal to create one!</span>
+      </p>
+    </div>
+  </div>
+  
+  <div id="completed-goals-container" class="goals-tab-content" style="display: none;">
+    <div id="completed-goals-list" style="margin-top: 20px;">
+      <p style="color: #999; text-align: center; padding: 40px;">
+        <span data-i18n="no_completed_goals">No completed goals yet. Complete your first goal to see it here!</span>
+      </p>
+    </div>
+  </div>
+  
+  <div id="archived-goals-container" class="goals-tab-content" style="display: none;">
+    <div id="archived-goals-list" style="margin-top: 20px;">
+      <p style="color: #999; text-align: center; padding: 40px;">
+        <span data-i18n="no_archived_goals">No archived goals yet. Archive a completed goal to see it here!</span>
+      </p>
+    </div>
   </div>
 </div>
+
+<style>
+.goal-tab:hover {
+  color: #6c21e4;
+}
+
+.goal-tab.active {
+  color: #6c21e4;
+  border-bottom-color: #6c21e4;
+}
+
+.goals-tab-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+</style>
 
 <script type="module" src="/static/js/pages/dashboard.js"></script>
 {% endblock %}

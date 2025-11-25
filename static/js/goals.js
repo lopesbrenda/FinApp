@@ -87,9 +87,76 @@ export async function addContribution(goalId, amount) {
     }, 0);
     
     await updateDoc(goalRef, { currentAmount: total });
-    return true;
+    
+    const justCompleted = total >= data.targetAmount && (!data.completedAt);
+    
+    return { success: true, justCompleted, currentAmount: total, targetAmount: data.targetAmount };
   } catch (error) {
     console.error("Error adding contribution:", error);
+    throw error;
+  }
+}
+
+export async function markAsAchieved(goalId) {
+  try {
+    const goalRef = doc(db, COLLECTION.GOALS, goalId);
+    await updateDoc(goalRef, {
+      completedAt: new Date().toISOString(),
+      achieved: true
+    });
+    return true;
+  } catch (error) {
+    console.error("Error marking goal as achieved:", error);
+    throw error;
+  }
+}
+
+export async function restartGoal(goalId) {
+  try {
+    const goalRef = doc(db, COLLECTION.GOALS, goalId);
+    await updateDoc(goalRef, {
+      currentAmount: 0,
+      completedAt: null,
+      achieved: false,
+      archived: false,
+      contributions: []
+    });
+    return true;
+  } catch (error) {
+    console.error("Error restarting goal:", error);
+    throw error;
+  }
+}
+
+export async function archiveGoal(goalId) {
+  try {
+    const goalRef = doc(db, COLLECTION.GOALS, goalId);
+    const snap = await getDoc(goalRef);
+    const data = snap.data();
+    
+    await updateDoc(goalRef, {
+      archived: true,
+      archivedAt: new Date().toISOString(),
+      completedAt: data.completedAt || new Date().toISOString(),
+      achieved: true
+    });
+    return true;
+  } catch (error) {
+    console.error("Error archiving goal:", error);
+    throw error;
+  }
+}
+
+export async function unarchiveGoal(goalId) {
+  try {
+    const goalRef = doc(db, COLLECTION.GOALS, goalId);
+    await updateDoc(goalRef, {
+      archived: false,
+      archivedAt: null
+    });
+    return true;
+  } catch (error) {
+    console.error("Error unarchiving goal:", error);
     throw error;
   }
 }

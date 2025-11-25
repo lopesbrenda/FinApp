@@ -211,3 +211,219 @@
     min-width: unset;
   }
 }
+
+/* ==================== CELEBRATION MODAL STYLES ==================== */
+
+.celebration-modal {
+  max-width: 550px;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f9f7ff 100%);
+}
+
+.dark .celebration-modal {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1e1a2e 100%);
+}
+
+.celebration-header {
+  margin-bottom: 32px;
+}
+
+.celebration-icon {
+  font-size: 72px;
+  margin-bottom: 16px;
+  animation: bounce 0.6s ease-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.celebration-header h2 {
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6c21e4 0%, #9b59d0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.celebration-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}
+
+.goal-completion-summary {
+  background: rgba(108, 33, 228, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.dark .goal-completion-summary {
+  background: rgba(108, 33, 228, 0.15);
+}
+
+.goal-completion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(108, 33, 228, 0.1);
+}
+
+.goal-completion-item:last-child {
+  border-bottom: none;
+}
+
+.completion-label {
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+}
+
+.completion-value {
+  font-weight: 700;
+  color: var(--text-color, #1a1a1a);
+  font-size: 16px;
+}
+
+.dark .completion-value {
+  color: var(--text-dark, #f0f0f0);
+}
+
+.celebration-message {
+  margin: 24px 0;
+}
+
+.celebration-message p {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-color, #1a1a1a);
+  margin: 0;
+}
+
+.dark .celebration-message p {
+  color: var(--text-dark, #f0f0f0);
+}
+
+.celebration-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.btn-celebration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 12px;
+  background: white;
+  color: var(--text-color, #1a1a1a);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 90px;
+}
+
+.btn-celebration .btn-icon {
+  font-size: 32px;
+}
+
+.btn-celebration:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn-archive {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.btn-archive:hover {
+  background: #3498db;
+  color: white;
+}
+
+.btn-restart {
+  border-color: #e67e22;
+  color: #e67e22;
+}
+
+.btn-restart:hover {
+  background: #e67e22;
+  color: white;
+}
+
+.btn-keep {
+  border-color: #27ae60;
+  color: #27ae60;
+}
+
+.btn-keep:hover {
+  background: #27ae60;
+  color: white;
+}
+
+.dark .btn-celebration {
+  background: #1a1a1a;
+  border-color: #444;
+}
+
+.dark .btn-celebration:hover {
+  background: var(--hover-bg-dark, #333);
+}
+
+.btn-close-celebration {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 10px;
+  color: var(--text-secondary, #666);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-close-celebration:hover {
+  background: var(--hover-bg, #f5f5f5);
+  border-color: var(--text-secondary, #999);
+}
+
+.dark .btn-close-celebration {
+  border-color: #444;
+  color: var(--text-dark, #f0f0f0);
+}
+
+.dark .btn-close-celebration:hover {
+  background: var(--hover-bg-dark, #333);
+}
+
+@media (max-width: 768px) {
+  .celebration-modal {
+    width: 95%;
+    padding: 24px;
+  }
+  
+  .celebration-icon {
+    font-size: 56px;
+  }
+  
+  .celebration-header h2 {
+    font-size: 26px;
+  }
+  
+  .celebration-actions {
+    grid-template-columns: 1fr;
+  }
+}

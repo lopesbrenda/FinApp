@@ -114,7 +114,34 @@ const translations = {
     // Sidebar
     'sidebar.profile': 'Profile',
     'sidebar.settings': 'Settings',
-    'sidebar.password': 'Password'
+    'sidebar.password': 'Password',
+    
+    // Goal Completion
+    'goal_completed_title': 'Goal Completed!',
+    'goal_completed_subtitle': 'Congratulations! You\'ve reached your goal.',
+    'what_would_you_like': 'What would you like to do?',
+    'archive_goal': 'Archive Goal',
+    'restart_goal': 'Restart Goal',
+    'keep_visible': 'Keep Visible',
+    'goal_name': 'Goal',
+    'target_amount': 'Target',
+    'time_to_complete': 'Time to complete',
+    'day': 'day',
+    'days': 'days',
+    'close': 'Close',
+    'goal_archived_success': 'Goal archived successfully!',
+    'goal_archived_error': 'Error archiving goal. Please try again.',
+    'goal_restarted_success': 'Goal restarted successfully!',
+    'goal_restarted_error': 'Error restarting goal. Please try again.',
+    'active_goals': 'Active Goals',
+    'completed_goals': 'Completed Goals',
+    'archived_goals': 'Archived Goals',
+    'no_completed_goals': 'No completed goals yet. Complete your first goal to see it here!',
+    'no_archived_goals': 'No archived goals yet. Archive a completed goal to see it here!',
+    'completed_on': 'Completed on',
+    'unarchive': 'Unarchive',
+    'mark_as_achieved': 'Mark as Achieved',
+    'edit_goal': 'Edit Goal'
   },
   pt: {
     // Navbar
@@ -229,7 +256,34 @@ const translations = {
     // Sidebar
     'sidebar.profile': 'Perfil',
     'sidebar.settings': 'Configurações',
-    'sidebar.password': 'Senha'
+    'sidebar.password': 'Senha',
+    
+    // Goal Completion
+    'goal_completed_title': 'Meta Concluída!',
+    'goal_completed_subtitle': 'Parabéns! Você atingiu sua meta.',
+    'what_would_you_like': 'O que você gostaria de fazer?',
+    'archive_goal': 'Arquivar Meta',
+    'restart_goal': 'Recomeçar Meta',
+    'keep_visible': 'Manter Visível',
+    'goal_name': 'Meta',
+    'target_amount': 'Valor',
+    'time_to_complete': 'Tempo para completar',
+    'day': 'dia',
+    'days': 'dias',
+    'close': 'Fechar',
+    'goal_archived_success': 'Meta arquivada com sucesso!',
+    'goal_archived_error': 'Erro ao arquivar meta. Tente novamente.',
+    'goal_restarted_success': 'Meta reiniciada com sucesso!',
+    'goal_restarted_error': 'Erro ao reiniciar meta. Tente novamente.',
+    'active_goals': 'Metas Ativas',
+    'completed_goals': 'Metas Concluídas',
+    'archived_goals': 'Metas Arquivadas',
+    'no_completed_goals': 'Nenhuma meta concluída ainda. Complete sua primeira meta para vê-la aqui!',
+    'no_archived_goals': 'Nenhuma meta arquivada ainda. Arquive uma meta concluída para vê-la aqui!',
+    'completed_on': 'Concluída em',
+    'unarchive': 'Desarquivar',
+    'mark_as_achieved': 'Marcar como Concluída',
+    'edit_goal': 'Editar Meta'
   }
 };
 
