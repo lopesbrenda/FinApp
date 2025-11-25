@@ -174,6 +174,24 @@ export async function updateGoalAmount(goalId, newAmount) {
 }
 
 /**
+ * Update goal details
+ * @param {string} goalId - Goal document ID
+ * @param {Object} updates - Fields to update
+ * @returns {Promise<boolean>} Success status
+ */
+export async function updateGoal(goalId, updates) {
+  try {
+    const goalRef = doc(db, COLLECTION.BUDGET, goalId);
+    await updateDoc(goalRef, updates);
+    console.log(`✏️ Goal updated: ${goalId}`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error updating goal:", error);
+    throw error;
+  }
+}
+
+/**
  * Delete a goal
  * @param {string} goalId - Goal document ID
  * @returns {Promise<boolean>} Success status

@@ -41,6 +41,17 @@ export async function updateGoalAmount(goalId, newAmount) {
   }
 }
 
+export async function updateGoal(goalId, updates) {
+  try {
+    const goalRef = doc(db, COLLECTION.GOALS, goalId);
+    await updateDoc(goalRef, updates);
+    return true;
+  } catch (error) {
+    console.error("Error updating goal:", error);
+    throw error;
+  }
+}
+
 export async function deleteGoal(goalId) {
   try {
     const goalRef = doc(db, COLLECTION.GOALS, goalId);

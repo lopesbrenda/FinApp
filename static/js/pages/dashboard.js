@@ -1,11 +1,13 @@
 import { auth, db } from "../firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { addExpense, updateExpense, deleteExpense, getUserExpenses, getCategoryIcon, getCategoryName } from "../expenses.js";
-import { addGoal, getUserGoals, updateGoalAmount, deleteGoal, addContribution } from "../goals.js";
+import { addGoal, getUserGoals, updateGoalAmount, updateGoal, deleteGoal, addContribution } from "../goals.js";
 import { showAlert } from "../utils/alerts.js";
 import { showModal } from "../utils/modal.js";
 import { COLLECTION } from "../firebase/firebase-dbs.js";
 import { expandRecurringTransactions, getRecurringLabel } from "../utils/recurring-transactions.js";
+import { checkGoalNotifications } from "../utils/goal-notifications.js";
+import { checkExpenseNotifications } from "../utils/expense-notifications.js";
 
 function getCurrencySymbol(currency) {
   const symbols = {
@@ -238,6 +240,62 @@ if (addGoalBtn) {
   });
 }
 
+async function handleEditGoal(goal) {
+  let dueDateValue = "";
+  if (goal.dueDate) {
+    if (typeof goal.dueDate === 'string') {
+      dueDateValue = goal.dueDate.split('T')[0];
+    } else if (goal.dueDate.toDate) {
+      dueDateValue = goal.dueDate.toDate().toISOString().split('T')[0];
+    }
+  }
+
+  showModal({
+    title: "Edit Goal",
+    type: "goal",
+    prefill: {
+      "#goal-title": goal.title,
+      "#goal-target": goal.targetAmount,
+      "#goal-date": dueDateValue
+    },
+    onConfirm: async (modalInstance) => {
+      try {
+        if (!auth.currentUser) {
+          showAlert("Please log in first.", "error");
+          return false;
+        }
+
+        const titleEl = modalInstance.getField("#goal-title");
+        const targetEl = modalInstance.getField("#goal-target");
+        const dateEl = modalInstance.getField("#goal-date");
+
+        if (!titleEl.value || !targetEl.value || !dateEl.value) {
+          showAlert("Fill all fields.", "error");
+          return false;
+        }
+
+        const title = titleEl.value.trim();
+        const targetAmount = parseFloat(targetEl.value) || 0;
+        const dueDate = dateEl.value;
+
+        await updateGoal(goal.id, {
+          title,
+          targetAmount,
+          dueDate
+        });
+        
+        await refreshDashboard();
+        showAlert("Goal updated!", "success");
+        return true;
+      } catch (err) {
+        console.error("Error updating goal:", err);
+        showAlert("Failed to update goal.", "error");
+        return false;
+      }
+    }
+  });
+}
+
 if (contributeGoalBtn) {
   console.log("✅ Adding event listener to Contribute button");
   contributeGoalBtn.addEventListener("click", () => {
@@ -314,6 +372,8 @@ auth.onAuthStateChanged(async (user) => {
   });
 });
 
+let hasCheckedNotifications = false;
+
 async function refreshDashboard() {
   try {
     const userId = auth.currentUser.uid;
@@ -330,6 +390,20 @@ async function refreshDashboard() {
     renderGoalsList(goals);
     updateBalance(expenses, goals);
     updateSummary(expenses, goals);
+
+    if (!hasCheckedNotifications) {
+      hasCheckedNotifications = true;
+      setTimeout(() => {
+        if (goals.length > 0) {
+          checkGoalNotifications(goals, window.userPreferences);
+        }
+        if (expenses.length > 0) {
+          setTimeout(() => {
+            checkExpenseNotifications(expenses, window.userPreferences);
+          }, 500);
+        }
+      }, 1000);
+    }
   } catch (err) {
     console.error("Failed to refresh dashboard:", err);
     showAlert("Failed to refresh dashboard.", "error");
@@ -504,7 +578,10 @@ function renderGoalsList(goals = []) {
           <strong>🎯 ${goal.title}</strong>
           <p style="color: #666; font-size: 0.9rem; margin: 4px 0;">Due: ${dueDateStr}</p>
         </div>
-        <button class="btn-small btn-danger" data-id="${goal.id}" data-action="delete">Delete</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-small" data-id="${goal.id}" data-action="edit" style="background: #6c21e4; color: white;">Edit</button>
+          <button class="btn-small btn-danger" data-id="${goal.id}" data-action="delete">Delete</button>
+        </div>
       </div>
       <div style="margin-bottom: 8px;">
         <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
@@ -523,13 +600,22 @@ function renderGoalsList(goals = []) {
   container.querySelectorAll("button").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const id = e.target.dataset.id;
-      try {
-        await deleteGoal(id);
-        await refreshDashboard();
-        showAlert("Goal deleted!", "success");
-      } catch (err) {
-        console.error("Error deleting goal:", err);
-        showAlert("Failed to delete goal.", "error");
+      const action = e.target.dataset.action;
+      
+      if (action === "edit") {
+        const goal = goals.find(g => g.id === id);
+        if (goal) {
+          await handleEditGoal(goal);
+        }
+      } else if (action === "delete") {
+        try {
+          await deleteGoal(id);
+          await refreshDashboard();
+          showAlert("Goal deleted!", "success");
+        } catch (err) {
+          console.error("Error deleting goal:", err);
+          showAlert("Failed to delete goal.", "error");
+        }
       }
     });
   });

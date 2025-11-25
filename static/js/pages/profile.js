@@ -1,7 +1,5 @@
-// @@ static/js/pages/profile.js
-
-import { auth, db } from "../firebase/firebase-config.js";
-import { COLLECTION, spbs } from "../firebase/firebase-dbs.js";
+import { auth, db, storage } from "../firebase/firebase-config.js";
+import { COLLECTION } from "../firebase/firebase-dbs.js";
 import { showAlert } from "../utils/alerts.js";
 import {
   doc,
@@ -14,8 +12,9 @@ import {
   onAuthStateChanged,
   updateEmail,
   updatePassword,
+  updateProfile,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 // --------------------------------------------------------
 // Mini loader
@@ -47,15 +46,11 @@ document.querySelectorAll(".sidebar-link").forEach((btn) => {
     const panel = document.getElementById(target);
     if (panel) panel.classList.add("active");
 
-    // update page title
-    const titleEl = document.getElementById("profile-title");
+    const titleEl = document.getElementById("page-title");
     if (titleEl) titleEl.textContent = btn.textContent.trim();
   });
 });
 
-// --------------------------------------------------------
-// Avatar preview (local preview only)
-// --------------------------------------------------------
 // --------------------------------------------------------
 // Avatar preview + cropper
 // --------------------------------------------------------
@@ -70,16 +65,26 @@ const cropCancel = document.getElementById("crop-cancel");
 
 let cropper = null;
 
-// abrir input ao clicar no avatar
+// Open input when clicking avatar
 if (avatarImg && avatarInput) {
   avatarImg.addEventListener("click", () => avatarInput.click());
 }
 
-// quando usuário escolhe a imagem
+// When user selects image
 if (avatarInput) {
   avatarInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showAlert("Please select an image file.", "error");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showAlert("Image must be smaller than 5MB.", "error");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -99,7 +104,7 @@ if (avatarInput) {
   });
 }
 
-// cancelar crop
+// Cancel crop
 if (cropCancel) {
   cropCancel.addEventListener("click", () => {
     if (cropper) cropper.destroy();
@@ -108,7 +113,7 @@ if (cropCancel) {
   });
 }
 
-// confirmar corte
+// Confirm crop
 if (cropConfirm) {
   cropConfirm.addEventListener("click", async () => {
     if (!cropper) return;
@@ -122,7 +127,7 @@ if (cropConfirm) {
 
     canvas.toBlob(
       async (blob) => {
-        console.log("📸 Gerou BLOB do avatar");
+        console.log("📸 Generated avatar BLOB");
         cropModal.classList.add("hidden");
         cropper.destroy();
         cropper = null;
@@ -139,46 +144,33 @@ if (cropConfirm) {
   });
 }
 
-const supabase = createClient(spbs.SUPABASE_URL, spbs.SUPABASE_PUBLIC_KEY);
-
 async function uploadAvatar(blob) {
   try {
     const user = auth.currentUser;
     if (!user) return;
 
     const fileName = `${user.uid}.jpg`;
+    const storageRef = ref(storage, `avatars/${fileName}`);
 
-    const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, blob, { upsert: true });
+    await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(storageRef);
 
-    if (error) {
-      console.error("Erro upload Supabase:", error);
-      showAlert("Failed to upload avatar.", "danger");
-      return;
-    }
-
-    const { data: publicURLData } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-
-    const avatarUrl = publicURLData.publicUrl;
-
-    avatarImg.src = avatarUrl;
+    avatarImg.src = downloadURL;
     showAlert("Avatar uploaded!", "success");
 
-    // Salva URL no Firestore
+    // Save URL to Firestore
     const userRef = doc(db, COLLECTION.USERS, user.uid);
-    await updateDoc(userRef, { avatarUrl });
+    await updateDoc(userRef, { avatarUrl: downloadURL });
 
-    return avatarUrl;
+    // Update Firebase Auth profile
+    await updateProfile(user, { photoURL: downloadURL });
 
+    return downloadURL;
   } catch (err) {
-    console.error("❌ ERRO NO UPLOAD:", err);
-    showAlert("Error uploading avatar.", "danger");
+    console.error("❌ UPLOAD ERROR:", err);
+    showAlert("Error uploading avatar.", "error");
   }
 }
-
 
 // --------------------------------------------------------
 // Authentication + Firestore real-time sync
@@ -191,7 +183,6 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  //window.AUTH_UID = user.uid;
   const initial = await loadUserProfile(user);
 
   document.getElementById("profile-name").textContent = initial.name;
@@ -240,11 +231,9 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("edit-email").value = data.email || "";
   });
 
-  // NEW: Format date to "03 Oct 2024 · 14:22"
   function formatDate(rawDate) {
     if (!rawDate) return "";
 
-    // Se for Timestamp do Firestore, converte para Date
     let d;
     if (rawDate.toDate) {
       d = rawDate.toDate();
@@ -275,16 +264,55 @@ if (profileForm) {
     showLoader(true);
 
     const payload = {
-      newName: document.getElementById("edit-name").value,
-      newPhone: document.getElementById("edit-phone").value,
+      name: document.getElementById("edit-name").value,
+      phone: document.getElementById("edit-phone").value,
     };
 
     try {
       await setDoc(userRef, payload, { merge: true });
+      
+      if (payload.name && auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName: payload.name });
+      }
+      
       showAlert("Profile updated!", "success");
     } catch (err) {
       console.error(err);
-      showAlert("Failed to update profile.", "danger");
+      showAlert("Failed to update profile.", "error");
+    }
+
+    showLoader(false);
+  });
+}
+
+// --------------------------------------------------------
+// Save Settings
+// --------------------------------------------------------
+const settingsForm = document.getElementById("settings-form");
+if (settingsForm) {
+  settingsForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!userRef) return;
+
+    showLoader(true);
+
+    const currencyValue = document.getElementById("currency-select").value;
+    const languageValue = document.getElementById("language-select").value;
+    const alertExpensesValue = document.getElementById("alert-expenses").checked;
+    const alertGoalsValue = document.getElementById("alert-goals").checked;
+
+    try {
+      await updateDoc(userRef, {
+        "preferences.currency": currencyValue,
+        "preferences.language": languageValue,
+        "preferences.alertExpenses": alertExpensesValue,
+        "preferences.alertGoals": alertGoalsValue
+      });
+
+      showAlert("Settings saved!", "success");
+    } catch (err) {
+      console.error("Error saving settings:", err);
+      showAlert("Failed to save settings.", "error");
     }
 
     showLoader(false);
@@ -317,7 +345,7 @@ if (passwordForm) {
       showAlert("Credentials updated!", "success");
     } catch (err) {
       console.error(err);
-      showAlert("Failed to update credentials.", "danger");
+      showAlert("Failed to update credentials.", "error");
     }
 
     showLoader(false);
@@ -325,7 +353,7 @@ if (passwordForm) {
 }
 
 // --------------------------------------------------------
-// showing-hiding password
+// Showing/hiding password
 // --------------------------------------------------------
 document.querySelectorAll(".toggle-pass").forEach((btn) => {
   const input = document.getElementById(btn.dataset.target);
@@ -371,32 +399,35 @@ async function loadUserProfile(user) {
 
 // Custom Select: Currency
 const box = document.getElementById("currency-select-box");
-const trigger = box.querySelector(".currency-select-trigger");
-const options = box.querySelectorAll(".custom-option");
+const trigger = box?.querySelector(".currency-select-trigger");
+const options = box?.querySelectorAll(".custom-option");
 const selectedText = document.getElementById("currency-selected");
 const hiddenInput = document.getElementById("currency-select");
 
-trigger.addEventListener("click", () => {
-  box.classList.toggle("open");
-});
-
-options.forEach((opt) => {
-  opt.addEventListener("click", () => {
-    const value = opt.dataset.value;
-
-    options.forEach((o) => o.classList.remove("selected"));
-    opt.classList.add("selected");
-
-    selectedText.textContent = opt.textContent;
-
-    hiddenInput.value = value;
-
-    box.classList.remove("open");
+if (trigger) {
+  trigger.addEventListener("click", () => {
+    box.classList.toggle("open");
   });
-});
+}
+
+if (options) {
+  options.forEach((opt) => {
+    opt.addEventListener("click", () => {
+      const value = opt.dataset.value;
+
+      options.forEach((o) => o.classList.remove("selected"));
+      opt.classList.add("selected");
+
+      selectedText.textContent = opt.textContent;
+      hiddenInput.value = value;
+
+      box.classList.remove("open");
+    });
+  });
+}
 
 document.addEventListener("click", (e) => {
-  if (!box.contains(e.target)) {
+  if (box && !box.contains(e.target)) {
     box.classList.remove("open");
   }
 });

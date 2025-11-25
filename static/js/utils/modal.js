@@ -5,7 +5,7 @@ import { showAlert } from "./alerts.js";
 
 let modalStack = [];
 
-export function showModal({ title, message = "", type = "confirm", preselectedType = "", onConfirm, onCancel, isSubModal = false }) {
+export function showModal({ title, message = "", type = "confirm", preselectedType = "", prefill = {}, onConfirm, onCancel, isSubModal = false }) {
   if (!isSubModal) {
     const existingModals = document.querySelectorAll('[id^="modal-"]');
     existingModals.forEach(m => m.remove());
@@ -444,6 +444,16 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
       if (onCancel) onCancel(modalInstance);
     }
   });
+
+  // Apply prefill values after modal is added to DOM
+  setTimeout(() => {
+    Object.keys(prefill).forEach((selector) => {
+      const field = modal.querySelector(selector);
+      if (field) {
+        field.value = prefill[selector];
+      }
+    });
+  }, 0);
 
   return modalInstance;
 }

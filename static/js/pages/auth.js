@@ -1,7 +1,20 @@
-import { auth } from "../firebase/firebase-config.js";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { showAlert } from "../utils/alerts.js";
+// static/js/pages/auth.js
+// Login and Signup functionality
 
+import { auth, db } from "../firebase/firebase-config.js";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { showAlert } from "../utils/alerts.js";
+import { COLLECTION } from "../firebase/firebase-dbs.js";
+
+// ========================================
+// LOGIN
+// ========================================
 const loginForm = document.getElementById("login-form");
 const forgotPasswordBtn = document.getElementById("forgot-password-btn");
 
@@ -123,6 +136,82 @@ function showForgotPasswordModal() {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
       closeModal();
+    }
+  });
+}
+
+// ========================================
+// SIGNUP
+// ========================================
+const signupForm = document.getElementById("signup-form");
+
+if (signupForm) {
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const nameInput = signupForm.querySelector('input[type="text"]');
+    const emailInput = signupForm.querySelector('input[type="email"]');
+    const passwordInputs = signupForm.querySelectorAll('input[type="password"]');
+
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInputs[0].value;
+    const confirmPassword = passwordInputs[1].value;
+
+    if (!name || !email || !password || !confirmPassword) {
+      showAlert("Please fill in all fields.", "error");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showAlert("Passwords do not match.", "error");
+      return;
+    }
+
+    if (password.length < 6) {
+      showAlert("Password must be at least 6 characters.", "error");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await updateProfile(user, {
+        displayName: name
+      });
+
+      await setDoc(doc(db, COLLECTION.USERS, user.uid), {
+        name: name,
+        email: email,
+        createdAt: serverTimestamp(),
+        preferences: {
+          currency: "EUR",
+          language: "en",
+          alertExpenses: false,
+          alertGoals: false,
+          customCategories: [],
+          paymentMethods: ["Credit Card", "Debit Card", "Cash"]
+        }
+      });
+
+      showAlert("Account created successfully!", "success");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 500);
+    } catch (error) {
+      console.error("Signup error:", error);
+      let message = "Signup failed. Please try again.";
+      
+      if (error.code === "auth/email-already-in-use") {
+        message = "This email is already registered.";
+      } else if (error.code === "auth/invalid-email") {
+        message = "Invalid email address.";
+      } else if (error.code === "auth/weak-password") {
+        message = "Password is too weak. Use at least 6 characters.";
+      }
+      
+      showAlert(message, "error");
     }
   });
 }
