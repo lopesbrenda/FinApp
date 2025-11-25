@@ -43,6 +43,33 @@ const addExpenseBtn = document.getElementById("add-expense");
 const addGoalBtn = document.getElementById("add-goal");
 const contributeGoalBtn = document.getElementById("contribute-goal");
 
+function loadFiltersFromStorage() {
+  try {
+    const saved = localStorage.getItem('transactionFilters');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Error loading filters:', e);
+  }
+  return {
+    period: 'current_month',
+    type: 'all',
+    category: 'all',
+    showRecurring: true
+  };
+}
+
+function saveFiltersToStorage() {
+  try {
+    localStorage.setItem('transactionFilters', JSON.stringify(transactionFilters));
+  } catch (e) {
+    console.error('Error saving filters:', e);
+  }
+}
+
+let transactionFilters = loadFiltersFromStorage();
+
 console.log("🔘 Registering button event listeners...", { addIncomeBtn, addExpenseBtn, addGoalBtn, contributeGoalBtn });
 
 if (addIncomeBtn) {
@@ -360,6 +387,57 @@ if (contributeGoalBtn) {
   });
 }
 
+const periodFilterEl = document.getElementById("period-filter");
+if (periodFilterEl) {
+  periodFilterEl.value = transactionFilters.period;
+  
+  periodFilterEl.addEventListener("change", (e) => {
+    transactionFilters.period = e.target.value;
+    saveFiltersToStorage();
+    
+    const periodBounds = getPeriodBounds(transactionFilters.period);
+    const expenses = expandRecurringTransactions(window.rawExpenses || [], periodBounds);
+    window.expenses = expenses;
+    
+    renderExpensesList(window.expenses || []);
+  });
+}
+
+const filtersBtn = document.getElementById("filters-btn");
+if (filtersBtn) {
+  filtersBtn.addEventListener("click", () => {
+    const allCategories = new Map();
+    (window.expenses || []).forEach(exp => {
+      if (exp.category && exp.type) {
+        const displayName = getCategoryName(exp.category, exp.type);
+        if (!allCategories.has(exp.category)) {
+          allCategories.set(exp.category, displayName);
+        }
+      }
+    });
+    
+    showModal({
+      title: i18n.t('advanced_filters') || "Advanced Filters",
+      type: "filters",
+      currentFilters: transactionFilters,
+      availableCategories: allCategories,
+      onConfirm: async (modalInstance) => {
+        const typeFilter = modalInstance.getField("#filter-type");
+        const categoryFilter = modalInstance.getField("#filter-category");
+        const recurringCheckbox = modalInstance.getField("#filter-recurring");
+        
+        if (typeFilter) transactionFilters.type = typeFilter.value;
+        if (categoryFilter) transactionFilters.category = categoryFilter.value;
+        if (recurringCheckbox) transactionFilters.showRecurring = recurringCheckbox.checked;
+        
+        saveFiltersToStorage();
+        renderExpensesList(window.expenses || []);
+        return true;
+      }
+    });
+  });
+}
+
 // Auth check and data sync
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
@@ -392,7 +470,10 @@ async function refreshDashboard() {
     if (!userId) return;
 
     const rawExpenses = (await getUserExpenses(userId)) || [];
-    const expenses = expandRecurringTransactions(rawExpenses);
+    window.rawExpenses = rawExpenses;
+    
+    const periodBounds = getPeriodBounds(transactionFilters.period);
+    const expenses = expandRecurringTransactions(rawExpenses, periodBounds);
     const goals = (await getUserGoals(userId)) || [];
 
     window.expenses = expenses;
@@ -481,54 +562,264 @@ function updateSummary(expenses = [], goals = []) {
   if (goalsEl) goalsEl.textContent = `${symbol} ${totalGoals.toFixed(2)}`;
 }
 
+function filterTransactionsByPeriod(transactions, period) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  return transactions.filter(txn => {
+    const txnDate = txn.date || txn.createdAt;
+    let date;
+    
+    if (txnDate?.toDate) {
+      date = txnDate.toDate();
+    } else if (typeof txnDate === 'string') {
+      const parts = txnDate.split('T')[0].split('-');
+      if (parts.length === 3) {
+        date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      } else {
+        date = new Date(txnDate);
+      }
+    } else {
+      date = new Date(txnDate || Date.now());
+    }
+    
+    date.setHours(0, 0, 0, 0);
+    
+    switch (period) {
+      case 'current_month':
+        const monthStart = new Date(currentYear, currentMonth, 1);
+        const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+        monthEnd.setHours(23, 59, 59, 999);
+        return date >= monthStart && date <= monthEnd;
+      
+      case 'last_month':
+        const lastMonthStart = new Date(currentYear, currentMonth - 1, 1);
+        const lastMonthEnd = new Date(currentYear, currentMonth, 0);
+        lastMonthEnd.setHours(23, 59, 59, 999);
+        return date >= lastMonthStart && date <= lastMonthEnd;
+      
+      case 'last_3_months':
+        const threeMonthsAgo = new Date(currentYear, currentMonth - 3, 1);
+        threeMonthsAgo.setHours(0, 0, 0, 0);
+        return date >= threeMonthsAgo && date <= now;
+      
+      case 'current_year':
+        const yearStart = new Date(currentYear, 0, 1);
+        const yearEnd = new Date(currentYear, 11, 31);
+        yearEnd.setHours(23, 59, 59, 999);
+        return date >= yearStart && date <= yearEnd;
+      
+      case 'all':
+      default:
+        return true;
+    }
+  });
+}
+
+function groupTransactionsByDate(transactions) {
+  const groups = {};
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  transactions.forEach(txn => {
+    const txnDate = txn.date || txn.createdAt;
+    let date;
+    
+    if (txnDate?.toDate) {
+      date = txnDate.toDate();
+    } else if (typeof txnDate === 'string') {
+      const parts = txnDate.split('T')[0].split('-');
+      if (parts.length === 3) {
+        date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      } else {
+        date = new Date(txnDate);
+      }
+    } else {
+      date = new Date(txnDate || Date.now());
+    }
+    
+    date.setHours(0, 0, 0, 0);
+    
+    const isFuture = date > now;
+    
+    let groupKey;
+    if (!isFuture && date.getTime() === now.getTime()) {
+      groupKey = 'Today';
+    } else if (!isFuture && date.getTime() === yesterday.getTime()) {
+      groupKey = 'Yesterday';
+    } else {
+      groupKey = date.toLocaleDateString();
+    }
+    
+    if (!groups[groupKey]) {
+      groups[groupKey] = { date: date, transactions: [] };
+    }
+    groups[groupKey].transactions.push(txn);
+  });
+  
+  return Object.entries(groups).sort((a, b) => b[1].date - a[1].date);
+}
+
+function getPaymentMethodIcon(method) {
+  const icons = {
+    credit: '💳',
+    debit: '💳',
+    cash: '💵',
+    pix: '🔷',
+    bank_transfer: '🏦'
+  };
+  return icons[method] || '💰';
+}
+
+function getPeriodBounds(period) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  let startDate, endDate;
+  
+  switch (period) {
+    case 'current_month':
+      startDate = new Date(currentYear, currentMonth, 1);
+      endDate = new Date(currentYear, currentMonth + 1, 0);
+      break;
+    
+    case 'last_month':
+      startDate = new Date(currentYear, currentMonth - 1, 1);
+      endDate = new Date(currentYear, currentMonth, 0);
+      break;
+    
+    case 'last_3_months':
+      startDate = new Date(currentYear, currentMonth - 3, 1);
+      endDate = new Date(now);
+      break;
+    
+    case 'current_year':
+      startDate = new Date(currentYear, 0, 1);
+      endDate = new Date(currentYear, 11, 31);
+      break;
+    
+    case 'all':
+    default:
+      return null;
+  }
+  
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(23, 59, 59, 999);
+  
+  return { startDate, endDate };
+}
+
 function renderExpensesList(expenses = []) {
+  if (!Array.isArray(expenses)) expenses = [];
+  
   const symbol = getCurrencySymbol(window.currency);
   const container = document.getElementById("expenses-list");
   if (!container) return;
 
   container.innerHTML = "";
+  
+  const periodBounds = getPeriodBounds(transactionFilters.period);
+  
+  let filtered = expenses;
+  
+  if (periodBounds) {
+    filtered = expenses.filter(exp => {
+      if (exp.virtualOccurrence) {
+        let expDate;
+        if (typeof exp.date === 'string') {
+          const parts = exp.date.split('T')[0].split('-');
+          if (parts.length === 3) {
+            expDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          } else {
+            expDate = new Date(exp.date);
+          }
+        } else {
+          expDate = new Date(exp.date);
+        }
+        expDate.setHours(0, 0, 0, 0);
+        return expDate >= periodBounds.startDate && expDate <= periodBounds.endDate;
+      } else {
+        return filterTransactionsByPeriod([exp], transactionFilters.period).length > 0;
+      }
+    });
+  }
+  
+  if (transactionFilters.type !== 'all') {
+    filtered = filtered.filter(e => e.type === transactionFilters.type);
+  }
+  
+  if (transactionFilters.category !== 'all') {
+    filtered = filtered.filter(e => e.category === transactionFilters.category);
+  }
+  
+  if (!transactionFilters.showRecurring) {
+    filtered = filtered.filter(e => !e.virtualOccurrence);
+  }
 
-  if (!expenses.length) {
+  if (!filtered.length) {
     container.innerHTML = `
       <p style="color: #999; text-align: center; padding: 40px;">
-        <span data-i18n="dashboard.noTransactions">No transactions yet. Click + Income or + Expense to start!</span>
+        <span data-i18n="dashboard.noTransactions">No transactions found for this period.</span>
       </p>
     `;
     return;
   }
+  
+  const grouped = groupTransactionsByDate(filtered);
+  
+  grouped.forEach(([groupLabel, groupData]) => {
+    const dateHeader = document.createElement("div");
+    dateHeader.style.cssText = "font-weight: 600; font-size: 0.9rem; color: #6c21e4; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0;";
+    dateHeader.textContent = groupLabel;
+    container.appendChild(dateHeader);
+    
+    groupData.transactions.forEach(exp => {
+      const icon = getCategoryIcon(exp.category, exp.type);
+      const categoryName = getCategoryName(exp.category, exp.type);
+      const amount = safeNumber(exp.amount).toFixed(2);
+      const color = exp.type === "income" ? "#4caf50" : "#f44336";
+      const sign = exp.type === "income" ? "+" : "-";
+      const recurringLabel = getRecurringLabel(exp);
+      const paymentIcon = getPaymentMethodIcon(exp.paymentMethod);
+      
+      const isVirtual = exp.virtualOccurrence;
+      const isFuture = exp.isPast === false;
 
-  expenses.forEach(exp => {
-    const icon = getCategoryIcon(exp.category, exp.type);
-    const categoryName = getCategoryName(exp.category, exp.type);
-    const amount = safeNumber(exp.amount).toFixed(2);
-    const color = exp.type === "income" ? "#4caf50" : "#f44336";
-    const sign = exp.type === "income" ? "+" : "-";
-    const recurringLabel = getRecurringLabel(exp);
-    
-    const transactionDate = exp.date || exp.createdAt;
-    const createdDate = transactionDate?.toDate ? transactionDate.toDate() : new Date(transactionDate || Date.now());
-    const dateStr = createdDate.toLocaleDateString();
-    
-    const isVirtual = exp.virtualOccurrence;
-    const isFuture = exp.isPast === false;
-
-    const div = document.createElement("div");
-    div.style.cssText = `border-bottom: 1px solid #eee; padding: 16px 0; display: flex; justify-content: space-between; align-items: center; ${isFuture ? 'opacity: 0.6; font-style: italic;' : ''}`;
-    
-    div.innerHTML = `
-      <div>
-        <strong>${icon} ${categoryName}</strong>
-        ${recurringLabel ? `<span style="font-size: 0.85rem; color: #2196F3; margin-left: 8px;">${recurringLabel}</span>` : ''}
-        ${isFuture ? `<span style="font-size: 0.75rem; color: #999; margin-left: 8px;">(Upcoming)</span>` : ''}
-        <p style="color: #666; font-size: 0.9rem; margin: 4px 0;">${dateStr}</p>
-      </div>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <span style="color: ${color}; font-weight: bold;">${sign} ${symbol} ${amount}</span>
-        ${!isVirtual ? `<button class="btn-small btn-danger" data-id="${exp.id}" data-action="delete" data-type="${exp.type}">Delete</button>` : ''}
-      </div>
-    `;
-    
-    container.appendChild(div);
+      const div = document.createElement("div");
+      div.style.cssText = `border-bottom: 1px solid #f5f5f5; padding: 14px 0; display: flex; justify-content: space-between; align-items: center; ${isFuture ? 'opacity: 0.6;' : ''}`;
+      
+      const recurringBadge = exp.isRecurring ? `<span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">🔄 ${recurringLabel.replace('🔄 ', '')}</span>` : '';
+      const futureBadge = isFuture ? `<span style="background: #fff3e0; color: #f57c00; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">Upcoming</span>` : '';
+      
+      div.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+          <div style="font-size: 1.8rem;">${icon}</div>
+          <div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+              <strong style="font-size: 1rem;">${categoryName}</strong>
+              ${recurringBadge}
+              ${futureBadge}
+            </div>
+            <div style="color: #999; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+              <span>${paymentIcon} ${exp.paymentMethod || 'cash'}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span style="color: ${color}; font-weight: bold; font-size: 1.1rem;">${sign} ${symbol} ${amount}</span>
+          ${!isVirtual ? `<button class="btn-small btn-danger" data-id="${exp.id}" data-action="delete" data-type="${exp.type}" style="cursor: pointer;">Delete</button>` : ''}
+        </div>
+      `;
+      
+      container.appendChild(div);
+    });
   });
 
   container.querySelectorAll("button").forEach(btn => {

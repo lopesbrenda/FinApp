@@ -33,7 +33,7 @@ onAuthStateChanged(auth, (user) => {
     if (userNameEl) userNameEl.textContent = user.displayName || "User";
     if (userEmailEl) userEmailEl.textContent = user.email;
 
-    ["nav-dashboard", "nav-profile", "nav-settings", "logout-btn"].forEach(id => {
+    ["nav-dashboard", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "inline-block";
     });
@@ -46,7 +46,7 @@ onAuthStateChanged(auth, (user) => {
       setTimeout(() => (window.location.href = "/dashboard"), 300);
     }
   } else {
-    ["nav-dashboard", "nav-profile", "nav-settings", "logout-btn"].forEach(id => {
+    ["nav-dashboard", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
     });
@@ -55,7 +55,7 @@ onAuthStateChanged(auth, (user) => {
       if (el) el.style.display = "inline-block";
     });
 
-    if (["/dashboard", "/profile", "/settings"].includes(path)) {
+    if (["/dashboard", "/profile"].includes(path)) {
       console.log("🚫 Not logged in — redirecting to login...");
       setTimeout(() => (window.location.href = "/login"), 400);
     }

@@ -31,8 +31,20 @@
 </div>
 
 <div class="card" style="max-width: 1200px; margin: 20px auto;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2 data-i18n="dashboard.transactions">Recent Transactions</h2>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h2 data-i18n="dashboard.transactions" style="margin: 0;">Recent Transactions</h2>
+      <select id="period-filter" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.9rem; cursor: pointer;">
+        <option value="current_month" data-i18n="filter.current_month">This Month</option>
+        <option value="last_month" data-i18n="filter.last_month">Last Month</option>
+        <option value="last_3_months" data-i18n="filter.last_3_months">Last 3 Months</option>
+        <option value="current_year" data-i18n="filter.current_year">This Year</option>
+        <option value="all" data-i18n="filter.all">All Time</option>
+      </select>
+      <button id="filters-btn" class="btn-small" style="background: #6c21e4; color: white; cursor: pointer; padding: 6px 12px;">
+        🔍 <span data-i18n="filter.filters">Filters</span>
+      </button>
+    </div>
     <div style="display: flex; gap: 10px;">
       <button id="add-income" class="btn" style="background: #4caf50;">
         <span data-i18n="dashboard.addIncome">+ Income</span>

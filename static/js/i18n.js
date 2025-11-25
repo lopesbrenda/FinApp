@@ -141,7 +141,24 @@ const translations = {
     'completed_on': 'Completed on',
     'unarchive': 'Unarchive',
     'mark_as_achieved': 'Mark as Achieved',
-    'edit_goal': 'Edit Goal'
+    'edit_goal': 'Edit Goal',
+    
+    // Filters
+    'filter.current_month': 'This Month',
+    'filter.last_month': 'Last Month',
+    'filter.last_3_months': 'Last 3 Months',
+    'filter.current_year': 'This Year',
+    'filter.all': 'All Time',
+    'filter.filters': 'Filters',
+    'advanced_filters': 'Advanced Filters',
+    'filter.type': 'Transaction Type',
+    'filter.all_types': 'All Types',
+    'filter.income_only': 'Income Only',
+    'filter.expenses_only': 'Expenses Only',
+    'filter.category': 'Category',
+    'filter.all_categories': 'All Categories',
+    'filter.show_recurring': 'Show Recurring Transactions',
+    'filter.apply': 'Apply Filters'
   },
   pt: {
     // Navbar
@@ -283,7 +300,24 @@ const translations = {
     'completed_on': 'Concluída em',
     'unarchive': 'Desarquivar',
     'mark_as_achieved': 'Marcar como Concluída',
-    'edit_goal': 'Editar Meta'
+    'edit_goal': 'Editar Meta',
+    
+    // Filters
+    'filter.current_month': 'Este Mês',
+    'filter.last_month': 'Mês Passado',
+    'filter.last_3_months': 'Últimos 3 Meses',
+    'filter.current_year': 'Este Ano',
+    'filter.all': 'Todo Período',
+    'filter.filters': 'Filtros',
+    'advanced_filters': 'Filtros Avançados',
+    'filter.type': 'Tipo de Transação',
+    'filter.all_types': 'Todos os Tipos',
+    'filter.income_only': 'Apenas Receitas',
+    'filter.expenses_only': 'Apenas Despesas',
+    'filter.category': 'Categoria',
+    'filter.all_categories': 'Todas as Categorias',
+    'filter.show_recurring': 'Mostrar Transações Recorrentes',
+    'filter.apply': 'Aplicar Filtros'
   }
 };
 
