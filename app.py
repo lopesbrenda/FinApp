@@ -27,9 +27,13 @@ def profile():
 def dashboard():
     return render_template('dashboard.html')
 
-@app.route('/settings')
-def settings():
-    return render_template('profile.html')
+@app.route('/analytics')
+def analytics():
+    return render_template('analytics.html')
+
+@app.route('/recurring')
+def recurring():
+    return render_template('recurring.html')
 
 @app.route('/login')
 def login():

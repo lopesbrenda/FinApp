@@ -7,7 +7,6 @@ export const COLLECTION = {
   CATEGORIES: COLLECTIONS.categoryCollection,
   CURRENCY: COLLECTIONS.currencyCollection,
   GOALS: COLLECTIONS.goalsCollection,
-  SETTINGS: COLLECTIONS.settingsCollection,
   TRANSACTIONS: COLLECTIONS.transactionCollection,
   USERS: COLLECTIONS.userCollection,
   ACTIVITY_LOG: COLLECTIONS.activityLogsCollection,

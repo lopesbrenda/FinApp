@@ -1,0 +1,45 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="recurring-page">
+  <div class="page-header">
+    <h1 data-i18n="recurring.title">🔄 Recurring Transactions</h1>
+    <p data-i18n="recurring.subtitle">Manage your recurring income and expenses</p>
+  </div>
+
+  <div class="recurring-tabs">
+    <button class="tab-btn active" data-tab="all" data-i18n="recurring.all">All</button>
+    <button class="tab-btn" data-tab="income" data-i18n="recurring.income_tab">Income</button>
+    <button class="tab-btn" data-tab="expenses" data-i18n="recurring.expenses_tab">Expenses</button>
+  </div>
+
+  <div class="recurring-summary">
+    <div class="summary-item income">
+      <span class="summary-label" data-i18n="recurring.monthly_income">Monthly Recurring Income</span>
+      <span class="summary-value" id="recurring-income">$0.00</span>
+    </div>
+    <div class="summary-item expenses">
+      <span class="summary-label" data-i18n="recurring.monthly_expenses">Monthly Recurring Expenses</span>
+      <span class="summary-value" id="recurring-expenses">$0.00</span>
+    </div>
+    <div class="summary-item net">
+      <span class="summary-label" data-i18n="recurring.monthly_net">Net Monthly</span>
+      <span class="summary-value" id="recurring-net">$0.00</span>
+    </div>
+  </div>
+
+  <div class="recurring-list" id="recurring-list">
+    <div class="loading-state">
+      <p data-i18n="recurring.loading">Loading recurring transactions...</p>
+    </div>
+  </div>
+
+  <div class="empty-state" id="empty-state" style="display: none;">
+    <div class="empty-icon">🔄</div>
+    <h3 data-i18n="recurring.no_recurring">No Recurring Transactions</h3>
+    <p data-i18n="recurring.no_recurring_desc">You haven't set up any recurring transactions yet.</p>
+    <a href="/dashboard" class="btn" data-i18n="recurring.go_dashboard">Go to Dashboard</a>
+  </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/pages/recurring.js') }}"></script>
+{% endblock %}

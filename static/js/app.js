@@ -33,29 +33,38 @@ onAuthStateChanged(auth, (user) => {
     if (userNameEl) userNameEl.textContent = user.displayName || "User";
     if (userEmailEl) userEmailEl.textContent = user.email;
 
-    ["nav-dashboard", "nav-profile", "logout-btn"].forEach(id => {
+    ["nav-dashboard", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "inline-block";
     });
-    ["nav-login", "nav-signup"].forEach(id => {
+    ["nav-login", "nav-signup", "nav-home"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
     });
+    
+    const ctaSection = document.getElementById("cta-section");
+    if (ctaSection) ctaSection.style.display = "none";
+    
+    const heroWelcome = document.getElementById("hero-welcome");
+    if (heroWelcome) {
+      const userName = user.displayName || "User";
+      heroWelcome.textContent = `Welcome back, ${userName} 💜`;
+    }
 
     if (["/", "/login", "/signup"].includes(path)) {
       setTimeout(() => (window.location.href = "/dashboard"), 300);
     }
   } else {
-    ["nav-dashboard", "nav-profile", "logout-btn"].forEach(id => {
+    ["nav-dashboard", "nav-analytics", "nav-recurring", "nav-profile",  "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
     });
-    ["nav-login", "nav-signup"].forEach(id => {
+    ["nav-login", "nav-signup", "nav-home"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "inline-block";
     });
 
-    if (["/dashboard", "/profile"].includes(path)) {
+    if (["/dashboard", "/profile", "/analytics", "/recurring"].includes(path)) {
       console.log("🚫 Not logged in — redirecting to login...");
       setTimeout(() => (window.location.href = "/login"), 400);
     }

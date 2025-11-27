@@ -6,7 +6,10 @@
   
   <form id="login-form" class="form" style="margin-top: 30px;">
     <input id="login-email" type="email" data-i18n="login.email.placeholder" placeholder="Email" autocomplete="email" required />
-    <input id="login-password" type="password" data-i18n="login.password.placeholder" placeholder="Password" autocomplete="current-password" required />
+    <div class="password-wrapper">
+      <input id="login-password" type="password" data-i18n="login.password.placeholder" placeholder="Password" autocomplete="current-password" required />
+      <button type="button" class="toggle-password" aria-label="Toggle password visibility">🙈</button>
+    </div>
     <button type="submit" class="btn" data-i18n="login.submit">Sign In</button>
   </form>
   

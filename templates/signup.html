@@ -5,10 +5,16 @@
   <p data-i18n="signup.subtitle">Start managing your finances today</p>
   
   <form id="signup-form" class="form" style="margin-top: 30px;">
-    <input type="text" data-i18n="signup.name.placeholder" placeholder="Full name" autocomplete="name" required />
-    <input type="email" data-i18n="signup.email.placeholder" placeholder="Email" autocomplete="email" required />
-    <input type="password" data-i18n="signup.password.placeholder" placeholder="Password" autocomplete="new-password" required />
-    <input type="password" data-i18n="signup.confirm.placeholder" placeholder="Confirm password" autocomplete="new-password" required />
+    <input id="signup-name" type="text" data-i18n="signup.name.placeholder" placeholder="Full name" autocomplete="name" required />
+    <input id="signup-email" type="email" data-i18n="signup.email.placeholder" placeholder="Email" autocomplete="email" required />
+    <div class="password-wrapper">
+      <input id="signup-password" type="password" data-i18n="signup.password.placeholder" placeholder="Password" autocomplete="new-password" required />
+      <button type="button" class="toggle-password" aria-label="Toggle password visibility">🙈</button>
+    </div>
+    <div class="password-wrapper">
+      <input id="signup-confirm" type="password" data-i18n="signup.confirm.placeholder" placeholder="Confirm password" autocomplete="new-password" required />
+      <button type="button" class="toggle-password" aria-label="Toggle password visibility">🙈</button>
+    </div>
     <button type="submit" class="btn" data-i18n="signup.submit">Create Account</button>
   </form>
   

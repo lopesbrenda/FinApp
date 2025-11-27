@@ -215,3 +215,21 @@ if (signupForm) {
     }
   });
 }
+
+// ========================================
+// PASSWORD TOGGLE
+// ========================================
+document.querySelectorAll('.toggle-password').forEach(button => {
+  button.addEventListener('click', function() {
+    const wrapper = this.closest('.password-wrapper');
+    const input = wrapper.querySelector('input');
+    
+    if (input.type === 'password') {
+      input.type = 'text';
+      this.textContent = '🙉';
+    } else {
+      input.type = 'password';
+      this.textContent = '🙈';
+    }
+  });
+});

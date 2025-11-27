@@ -1,38 +1,84 @@
 {% extends "index.html" %}
 {% block content %}
-<div class="card">
-  <h1 data-i18n="home.title">Welcome to FinLife 💜</h1>
-  <p data-i18n="home.subtitle">Manage your personal finances smartly and efficiently.</p>
+<div class="home-hero">
+  <div class="hero-content">
+    <h1 class="hero-title" id="hero-welcome" data-i18n="home.title">Welcome to FinLife 💜</h1>
+    <p class="hero-subtitle" data-i18n="home.subtitle">Manage your personal finances smartly and efficiently.</p>
+  </div>
+</div>
+
+<div class="home-section">
+  <h2 class="section-title" data-i18n="home.quick_access">🔥 Quick Access</h2>
   
-  <div class="card-grid" style="margin-top: 30px;">
-    <div class="card" style="padding: 24px;">
-      <h3 data-i18n="home.dashboard.title">📊 Dashboard</h3>
-      <p data-i18n="home.dashboard.desc">Visualize your finances in real-time</p>
-      <a href="/dashboard" class="btn" data-i18n="btn.access">Access</a>
-    </div>
+  <div class="quick-access-grid">
+    <a href="/dashboard" class="quick-card quick-card-dashboard">
+      <div class="quick-card-icon">📊</div>
+      <div class="quick-card-content">
+        <h3 data-i18n="nav.dashboard">Dashboard</h3>
+        <p data-i18n="home.dashboard.desc">Real-time overview of your finances</p>
+        <span class="quick-card-hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
+      </div>
+    </a>
     
-    <div class="card" style="padding: 24px;">
-      <h3 data-i18n="home.profile.title">👤 Profile</h3>
-      <p data-i18n="home.profile.desc">Manage your personal information</p>
-      <a href="/profile" class="btn" data-i18n="btn.access">Access</a>
+    <a href="/profile" class="quick-card quick-card-profile">
+      <div class="quick-card-icon">👤</div>
+      <div class="quick-card-content">
+        <h3 data-i18n="nav.profile">Profile</h3>
+        <p data-i18n="home.profile.desc">Update your personal information</p>
+        <span class="quick-card-hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
+      </div>
+    </a>
+    <!--
+    <a href="/settings" class="quick-card quick-card-settings">
+      <div class="quick-card-icon">⚙️</div>
+      <div class="quick-card-content">
+        <h3 data-i18n="nav.settings">Settings</h3>
+        <p data-i18n="home.settings.desc">Customise your preferences</p>
+        <span class="quick-card-hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
+      </div>
+    </a>
+    -->
+
+  </div>
+</div>
+
+<div class="home-section features-section">
+  <h2 class="section-title" data-i18n="home.features.title">✨ Main Features</h2>
+  
+  <div class="features-grid">
+    <div class="feature-item">
+      <span class="feature-icon">💰</span>
+      <span class="feature-text" data-i18n="home.features.1">Track income & expenses</span>
     </div>
-    
-    <div class="card" style="padding: 24px;">
-      <h3 data-i18n="home.settings.title">⚙️ Settings</h3>
-      <p data-i18n="home.settings.desc">Customize your experience</p>
-      <a href="/settings" class="btn" data-i18n="btn.access">Access</a>
+    <div class="feature-item">
+      <span class="feature-icon">📈</span>
+      <span class="feature-text" data-i18n="home.features.2">Charts & monthly summaries</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🎯</span>
+      <span class="feature-text" data-i18n="home.features.3">Create and monitor financial goals</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔔</span>
+      <span class="feature-text" data-i18n="home.features.4">Custom alert notifications</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">💱</span>
+      <span class="feature-text" data-i18n="home.features.5">Multi-currency support</span>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔄</span>
+      <span class="feature-text" data-i18n="home.features.6">Recurring transactions</span>
     </div>
   </div>
 </div>
 
-<div class="card">
-  <h2 data-i18n="home.features.title">Main Features</h2>
-  <ul style="text-align: left; max-width: 600px; margin: 20px auto;">
-    <li style="margin-bottom: 12px;" data-i18n="home.features.1">💰 Expense and income tracking</li>
-    <li style="margin-bottom: 12px;" data-i18n="home.features.2">📈 Detailed charts and reports</li>
-    <li style="margin-bottom: 12px;" data-i18n="home.features.3">🎯 Financial goal setting</li>
-    <li style="margin-bottom: 12px;" data-i18n="home.features.4">🔔 Custom alerts and notifications</li>
-    <li style="margin-bottom: 12px;" data-i18n="home.features.5">💱 Multi-currency support</li>
-  </ul>
+<div class="home-section cta-section" id="cta-section">
+  <h2 class="cta-title" data-i18n="home.cta.title">Ready to take control?</h2>
+  <p class="cta-subtitle" data-i18n="home.cta.subtitle">Start managing your finances today!</p>
+  <div class="cta-buttons">
+    <a href="/signup" class="btn btn-primary btn-large" data-i18n="nav.signup">Sign Up</a>
+    <a href="/login" class="btn btn-secondary btn-large" data-i18n="nav.login">Login</a>
+  </div>
 </div>
 {% endblock %}

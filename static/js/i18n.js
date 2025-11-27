@@ -14,18 +14,23 @@ const translations = {
     // Home page
     'home.title': 'Welcome to FinLife 💜',
     'home.subtitle': 'Manage your personal finances smartly and efficiently.',
+    'home.quick_access': '🔥 Quick Access',
+    'home.tap_enter': '👉 Tap anywhere to enter',
     'home.dashboard.title': '📊 Dashboard',
-    'home.dashboard.desc': 'Visualize your finances in real-time',
+    'home.dashboard.desc': 'Real-time overview of your finances',
     'home.profile.title': '👤 Profile',
-    'home.profile.desc': 'Manage your personal information',
+    'home.profile.desc': 'Update your personal information',
     'home.settings.title': '⚙️ Settings',
-    'home.settings.desc': 'Customize your experience',
-    'home.features.title': 'Main Features',
-    'home.features.1': '💰 Expense and income tracking',
-    'home.features.2': '📈 Detailed charts and reports',
-    'home.features.3': '🎯 Financial goal setting',
-    'home.features.4': '🔔 Custom alerts and notifications',
-    'home.features.5': '💱 Multi-currency support',
+    'home.settings.desc': 'Customise your preferences',
+    'home.features.title': '✨ Main Features',
+    'home.features.1': 'Track income & expenses',
+    'home.features.2': 'Charts & monthly summaries',
+    'home.features.3': 'Create and monitor financial goals',
+    'home.features.4': 'Custom alert notifications',
+    'home.features.5': 'Multi-currency support',
+    'home.features.6': 'Recurring transactions',
+    'home.cta.title': 'Ready to take control?',
+    'home.cta.subtitle': 'Start managing your finances today!',
     'btn.access': 'Access',
     
     // Dashboard
@@ -191,7 +196,38 @@ const translations = {
     'time.years': 'years',
     'time.month': 'month',
     'time.months': 'months',
-    'time.and': 'and'
+    'time.and': 'and',
+    
+    // Analytics
+    'analytics.title': '📊 Financial Analytics',
+    'analytics.subtitle': 'Visualize your spending patterns and trends',
+    'analytics.period': 'Period:',
+    'analytics.summary': 'Summary',
+    'analytics.net_balance': 'Net Balance',
+    'analytics.monthly_overview': 'Monthly Overview',
+    'analytics.category_breakdown': 'Spending by Category',
+    'analytics.spending_trend': 'Spending Trend',
+    'analytics.top_expenses': 'Top Expense Categories',
+    'analytics.largest_expenses': 'Largest Expenses',
+    'analytics.no_data': 'No data available',
+    
+    // Recurring
+    'recurring.title': '🔄 Recurring Transactions',
+    'recurring.subtitle': 'Manage your recurring income and expenses',
+    'recurring.all': 'All',
+    'recurring.income_tab': 'Income',
+    'recurring.expenses_tab': 'Expenses',
+    'recurring.monthly_income': 'Monthly Recurring Income',
+    'recurring.monthly_expenses': 'Monthly Recurring Expenses',
+    'recurring.monthly_net': 'Net Monthly',
+    'recurring.loading': 'Loading recurring transactions...',
+    'recurring.no_recurring': 'No Recurring Transactions',
+    'recurring.no_recurring_desc': 'You haven\'t set up any recurring transactions yet.',
+    'recurring.go_dashboard': 'Go to Dashboard',
+    
+    // Navigation extras
+    'nav.analytics': 'Analytics',
+    'nav.recurring': 'Recurring'
   },
   pt: {
     // Navbar
@@ -206,18 +242,23 @@ const translations = {
     // Home page
     'home.title': 'Bem-vindo ao FinLife 💜',
     'home.subtitle': 'Gerencie suas finanças pessoais de forma inteligente e eficiente.',
+    'home.quick_access': '🔥 Acesso Rápido',
+    'home.tap_enter': '👉 Toque em qualquer lugar para entrar',
     'home.dashboard.title': '📊 Dashboard',
-    'home.dashboard.desc': 'Visualize suas finanças em tempo real',
+    'home.dashboard.desc': 'Visão geral das suas finanças em tempo real',
     'home.profile.title': '👤 Perfil',
-    'home.profile.desc': 'Gerencie suas informações pessoais',
+    'home.profile.desc': 'Atualize suas informações pessoais',
     'home.settings.title': '⚙️ Configurações',
-    'home.settings.desc': 'Personalize sua experiência',
-    'home.features.title': 'Recursos Principais',
-    'home.features.1': '💰 Controle de despesas e receitas',
-    'home.features.2': '📈 Gráficos e relatórios detalhados',
-    'home.features.3': '🎯 Definição de metas financeiras',
-    'home.features.4': '🔔 Alertas e notificações personalizadas',
-    'home.features.5': '💱 Suporte para múltiplas moedas',
+    'home.settings.desc': 'Personalize suas preferências',
+    'home.features.title': '✨ Recursos Principais',
+    'home.features.1': 'Controle receitas e despesas',
+    'home.features.2': 'Gráficos e resumos mensais',
+    'home.features.3': 'Crie e monitore metas financeiras',
+    'home.features.4': 'Alertas e notificações personalizadas',
+    'home.features.5': 'Suporte multi-moeda',
+    'home.features.6': 'Transações recorrentes',
+    'home.cta.title': 'Pronto para assumir o controle?',
+    'home.cta.subtitle': 'Comece a gerenciar suas finanças hoje!',
     'btn.access': 'Acessar',
     
     // Dashboard
@@ -383,7 +424,38 @@ const translations = {
     'time.years': 'anos',
     'time.month': 'mês',
     'time.months': 'meses',
-    'time.and': 'e'
+    'time.and': 'e',
+    
+    // Analytics
+    'analytics.title': '📊 Análises Financeiras',
+    'analytics.subtitle': 'Visualize seus padrões de gastos e tendências',
+    'analytics.period': 'Período:',
+    'analytics.summary': 'Resumo',
+    'analytics.net_balance': 'Saldo Líquido',
+    'analytics.monthly_overview': 'Visão Mensal',
+    'analytics.category_breakdown': 'Gastos por Categoria',
+    'analytics.spending_trend': 'Tendência de Gastos',
+    'analytics.top_expenses': 'Maiores Categorias de Despesas',
+    'analytics.largest_expenses': 'Maiores Despesas',
+    'analytics.no_data': 'Sem dados disponíveis',
+    
+    // Recurring
+    'recurring.title': '🔄 Transações Recorrentes',
+    'recurring.subtitle': 'Gerencie suas receitas e despesas recorrentes',
+    'recurring.all': 'Todas',
+    'recurring.income_tab': 'Receitas',
+    'recurring.expenses_tab': 'Despesas',
+    'recurring.monthly_income': 'Receita Mensal Recorrente',
+    'recurring.monthly_expenses': 'Despesas Mensais Recorrentes',
+    'recurring.monthly_net': 'Líquido Mensal',
+    'recurring.loading': 'Carregando transações recorrentes...',
+    'recurring.no_recurring': 'Nenhuma Transação Recorrente',
+    'recurring.no_recurring_desc': 'Você ainda não configurou nenhuma transação recorrente.',
+    'recurring.go_dashboard': 'Ir para o Dashboard',
+    
+    // Navigation extras
+    'nav.analytics': 'Análises',
+    'nav.recurring': 'Recorrentes'
   }
 };
 

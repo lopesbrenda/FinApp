@@ -1,0 +1,80 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="analytics-page">
+  <div class="page-header">
+    <h1 data-i18n="analytics.title">📊 Financial Analytics</h1>
+    <p data-i18n="analytics.subtitle">Visualize your spending patterns and trends</p>
+  </div>
+
+  <div class="analytics-controls">
+    <div class="period-selector">
+      <label for="analytics-period" data-i18n="analytics.period">Period:</label>
+      <select id="analytics-period">
+        <option value="current_month" data-i18n="filter.current_month">This Month</option>
+        <option value="last_month" data-i18n="filter.last_month">Last Month</option>
+        <option value="last_3_months" data-i18n="filter.last_3_months">Last 3 Months</option>
+        <option value="current_year" selected data-i18n="filter.current_year">This Year</option>
+        <option value="all" data-i18n="filter.all">All Time</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="analytics-grid">
+    <div class="analytics-card summary-card">
+      <h3 data-i18n="analytics.summary">Summary</h3>
+      <div class="summary-stats">
+        <div class="stat-item income">
+          <span class="stat-label" data-i18n="dashboard.income">Income</span>
+          <span class="stat-value" id="total-income">$0.00</span>
+        </div>
+        <div class="stat-item expenses">
+          <span class="stat-label" data-i18n="dashboard.expenses">Expenses</span>
+          <span class="stat-value" id="total-expenses">$0.00</span>
+        </div>
+        <div class="stat-item balance">
+          <span class="stat-label" data-i18n="analytics.net_balance">Net Balance</span>
+          <span class="stat-value" id="net-balance">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-card chart-card">
+      <h3 data-i18n="analytics.monthly_overview">Monthly Overview</h3>
+      <div class="chart-container">
+        <canvas id="monthly-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="analytics-card chart-card">
+      <h3 data-i18n="analytics.category_breakdown">Spending by Category</h3>
+      <div class="chart-container pie-container">
+        <canvas id="category-chart"></canvas>
+      </div>
+      <div id="category-legend" class="category-legend"></div>
+    </div>
+
+    <div class="analytics-card chart-card full-width">
+      <h3 data-i18n="analytics.spending_trend">Spending Trend</h3>
+      <div class="chart-container trend-container">
+        <canvas id="trend-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="analytics-card top-categories">
+      <h3 data-i18n="analytics.top_expenses">Top Expense Categories</h3>
+      <div id="top-categories-list" class="top-list">
+        <p class="no-data" data-i18n="analytics.no_data">No data available</p>
+      </div>
+    </div>
+
+    <div class="analytics-card recent-large">
+      <h3 data-i18n="analytics.largest_expenses">Largest Expenses</h3>
+      <div id="largest-expenses-list" class="top-list">
+        <p class="no-data" data-i18n="analytics.no_data">No data available</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/pages/analytics.js') }}"></script>
+{% endblock %}
