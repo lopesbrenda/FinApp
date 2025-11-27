@@ -10,6 +10,8 @@ import { checkGoalNotifications } from "../utils/goal-notifications.js";
 import { checkExpenseNotifications } from "../utils/expense-notifications.js";
 import { showGoalCompletionModal } from "../utils/goal-completion-modal.js";
 import { i18n } from "../i18n.js";
+import { calculateProjection, calculateProjectionStatus, formatProjectionTime, formatExpectedDate } from "../utils/projections.js";
+import { normalizeGoalRecords, persistLegacyProjectionFields } from "../utils/goal-normalizer.js";
 
 function getCurrencySymbol(currency) {
   const symbols = {
@@ -245,6 +247,8 @@ if (addGoalBtn) {
           const titleEl = modalInstance.getField("#goal-title");
           const targetEl = modalInstance.getField("#goal-target");
           const dateEl = modalInstance.getField("#goal-date");
+          const monthlyEl = modalInstance.getField("#goal-monthly");
+          const priorityEl = modalInstance.getField("#goal-priority");
 
           if (!titleEl.value || !targetEl.value || !dateEl.value) {
             showAlert("Fill all fields.", "error");
@@ -254,8 +258,10 @@ if (addGoalBtn) {
           const title = titleEl.value.trim();
           const targetAmount = parseFloat(targetEl.value) || 0;
           const dueDate = dateEl.value;
+          const monthlyContribution = parseFloat(monthlyEl.value) || 0;
+          const isPriority = priorityEl.checked;
 
-          await addGoal(auth.currentUser.uid, title, targetAmount, dueDate);
+          await addGoal(auth.currentUser.uid, title, targetAmount, dueDate, monthlyContribution, isPriority);
           await refreshDashboard();
           showAlert("Goal added!", "success");
           return true;
@@ -285,7 +291,9 @@ async function handleEditGoal(goal) {
     prefill: {
       "#goal-title": goal.title,
       "#goal-target": goal.targetAmount,
-      "#goal-date": dueDateValue
+      "#goal-date": dueDateValue,
+      "#goal-monthly": goal.monthlyContribution || 0,
+      "#goal-priority": goal.isPriority || false
     },
     onConfirm: async (modalInstance) => {
       try {
@@ -297,6 +305,8 @@ async function handleEditGoal(goal) {
         const titleEl = modalInstance.getField("#goal-title");
         const targetEl = modalInstance.getField("#goal-target");
         const dateEl = modalInstance.getField("#goal-date");
+        const monthlyEl = modalInstance.getField("#goal-monthly");
+        const priorityEl = modalInstance.getField("#goal-priority");
 
         if (!titleEl.value || !targetEl.value || !dateEl.value) {
           showAlert("Fill all fields.", "error");
@@ -306,12 +316,26 @@ async function handleEditGoal(goal) {
         const title = titleEl.value.trim();
         const targetAmount = parseFloat(targetEl.value) || 0;
         const dueDate = dateEl.value;
+        const monthlyContribution = parseFloat(monthlyEl.value) || 0;
+        const isPriority = priorityEl.checked;
 
-        await updateGoal(goal.id, {
+        const updates = {
           title,
           targetAmount,
-          dueDate
-        });
+          dueDate,
+          monthlyContribution,
+          isPriority
+        };
+        
+        const monthlyChanged = monthlyContribution !== (goal.monthlyContribution || 0);
+        if (monthlyChanged) {
+          const { serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+          updates.projectionStartAmount = goal.currentAmount || 0;
+          updates.localProjectionStartAt = Date.now();
+          updates.projectionStartDate = serverTimestamp();
+        }
+
+        await updateGoal(goal.id, updates);
         
         await refreshDashboard();
         showAlert("Goal updated!", "success");
@@ -347,6 +371,8 @@ if (contributeGoalBtn) {
 
           const goalEl = modalInstance.getField("#contrib-goal");
           const amountEl = modalInstance.getField("#contrib-amount");
+          const operationEl = modalInstance.getField("#contrib-operation");
+          const noteEl = modalInstance.getField("#contrib-note");
 
           if (!goalEl.value || !amountEl.value) {
             showAlert("Fill all fields.", "error");
@@ -354,16 +380,37 @@ if (contributeGoalBtn) {
           }
 
           const goalId = goalEl.value.trim();
-          const amount = parseFloat(amountEl.value) || 0;
+          const rawAmount = parseFloat(amountEl.value) || 0;
+          const operation = operationEl ? operationEl.value : "add";
+          const note = noteEl ? noteEl.value.trim() : '';
 
-          if (amount <= 0) {
-            showAlert("Amount must be greater than 0.", "error");
+          console.log("DEBUG Contribution:", {
+            goalId,
+            rawAmountValue: amountEl.value,
+            rawAmount,
+            operation,
+            operationElValue: operationEl?.value,
+            note
+          });
+
+          if (rawAmount <= 0) {
+            showAlert("Amount must be greater than zero.", "error");
             return false;
           }
+          
+          const amount = operation === "withdraw" ? -rawAmount : rawAmount;
+          console.log("DEBUG Final amount:", amount);
 
-          const result = await addContribution(goalId, amount);
+          const result = await addContribution(goalId, amount, note);
           await refreshDashboard();
-          showAlert("Contribution added!", "success");
+          
+          if (result.isWithdrawal) {
+            showAlert("Withdrawal registered!", "success");
+          } else if (result.isExtraContribution) {
+            showAlert("🎉 Extra contribution added! Your projection improved.", "success");
+          } else {
+            showAlert("Contribution added!", "success");
+          }
           
           if (result.justCompleted) {
             const goal = window.goals.find(g => g.id === goalId);
@@ -449,14 +496,29 @@ auth.onAuthStateChanged(async (user) => {
   console.log("✅ User logged in:", user.email);
   
   if (!window.currency) window.currency = "USD";
-  await refreshDashboard();
   
   const userRef = doc(db, COLLECTION.USERS, user.uid);
+  
+  const { getDoc: getUserDoc } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
+  try {
+    const userSnap = await getUserDoc(userRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      document.getElementById("user-name").textContent = data.name || user.displayName || "User";
+      window.currency = data.preferences?.currency || data.currency || "USD";
+      window.userPreferences = data;
+    }
+  } catch (err) {
+    console.warn("Failed to load user preferences:", err);
+  }
+  
+  await refreshDashboard();
+  
   onSnapshot(userRef, (snap) => {
     if (snap.exists()) {
       const data = snap.data();
       document.getElementById("user-name").textContent = data.name || user.displayName || "User";
-      window.currency = data.currency || "USD";
+      window.currency = data.preferences?.currency || data.currency || "USD";
       window.userPreferences = data;
       window.auth = auth;
       debouncedRefreshDashboard();
@@ -474,7 +536,12 @@ async function refreshDashboard() {
     
     const periodBounds = getPeriodBounds(transactionFilters.period);
     const expenses = expandRecurringTransactions(rawExpenses, periodBounds);
-    const goals = (await getUserGoals(userId)) || [];
+    const rawGoals = (await getUserGoals(userId)) || [];
+    const goals = normalizeGoalRecords(rawGoals);
+    
+    persistLegacyProjectionFields(goals, updateGoal).catch(err => 
+      console.warn("Background projection field persistence failed:", err)
+    );
 
     window.expenses = expenses;
     window.goals = goals;
@@ -862,11 +929,20 @@ function renderGoalsList(goals = []) {
     return;
   }
 
-  activeGoals.forEach(goal => {
+  const sortedGoals = [...activeGoals].sort((a, b) => {
+    if (a.isPriority && !b.isPriority) return -1;
+    if (!a.isPriority && b.isPriority) return 1;
+    return 0;
+  });
+
+  sortedGoals.forEach(goal => {
     const current = safeNumber(goal.currentAmount);
     const target = safeNumber(goal.targetAmount);
     const progress = target > 0 ? (current / target) * 100 : 0;
-    const isCompleted = false;
+    const monthlyContribution = safeNumber(goal.monthlyContribution);
+    
+    const projection = calculateProjection(target, current, monthlyContribution);
+    const projectionStatus = calculateProjectionStatus(goal);
     
     let dueDateStr = "No date set";
     if (goal.dueDate) {
@@ -878,9 +954,46 @@ function renderGoalsList(goals = []) {
         dueDateStr = goal.dueDate.toString();
       }
     }
+    
+    let projectionHTML = '';
+    if (monthlyContribution > 0 && projection.expectedDate) {
+      const timeRemaining = formatProjectionTime(projection.years, projection.months, {
+        year: i18n.t('time.year'),
+        years: i18n.t('time.years'),
+        month: i18n.t('time.month'),
+        months: i18n.t('time.months'),
+        and: i18n.t('time.and')
+      });
+      
+      const expectedDateStr = formatExpectedDate(projection.expectedDate, window.locale || 'en-US');
+      
+      let statusBadge = '';
+      if (projectionStatus.status === 'ahead') {
+        statusBadge = `<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px;">🎉 ${i18n.t('projection.ahead_schedule')}</span>`;
+      } else if (projectionStatus.status === 'behind') {
+        statusBadge = `<span style="background: #ff9800; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px;">⚠️ ${i18n.t('projection.behind_schedule')}</span>`;
+      } else if (projectionStatus.status === 'on-track') {
+        statusBadge = `<span style="background: #2196F3; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px;">✓ ${i18n.t('projection.on_track')}</span>`;
+      }
+      
+      projectionHTML = `
+        <p style="color: #666; font-size: 0.85rem; margin: 4px 0;">
+          🔮 <span data-i18n="projection.estimated">Estimated</span>: ${expectedDateStr}${statusBadge}
+        </p>
+        <p style="color: #999; font-size: 0.8rem; margin: 4px 0;">
+          📅 ${timeRemaining} <span data-i18n="projection.remaining">remaining</span>
+        </p>
+      `;
+    } else if (monthlyContribution > 0) {
+      projectionHTML = `
+        <p style="color: #999; font-size: 0.85rem; margin: 4px 0;">
+          💡 <span data-i18n="projection.set_monthly">Set monthly contribution to see projection</span>
+        </p>
+      `;
+    }
 
     const div = document.createElement("div");
-    div.style.cssText = `border: 1px solid #eee; border-radius: 8px; padding: 16px; margin-bottom: 16px;`;
+    div.style.cssText = `border: 1px solid ${goal.isPriority ? '#FFD700' : '#eee'}; border-left: 4px solid ${goal.isPriority ? '#FFD700' : '#2196F3'}; border-radius: 8px; padding: 16px; margin-bottom: 16px; ${goal.isPriority ? 'background: linear-gradient(to right, #fffef7, white);' : ''}`;
     
     const actionButtons = `
       <button class="btn-small" data-id="${goal.id}" data-action="edit" style="background: #6c21e4; color: white; cursor: pointer;">Edit</button>
@@ -890,8 +1003,9 @@ function renderGoalsList(goals = []) {
     div.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <div>
-          <strong>🎯 ${goal.title}</strong>
+          <strong>${goal.isPriority ? '⭐ ' : '🎯 '}${goal.title}</strong>
           <p style="color: #666; font-size: 0.9rem; margin: 4px 0;">Due: ${dueDateStr}</p>
+          ${projectionHTML}
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           ${actionButtons}
@@ -899,7 +1013,7 @@ function renderGoalsList(goals = []) {
       </div>
       <div style="margin-bottom: 8px;">
         <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
-          <div style="background: #2196F3; height: 100%; width: ${Math.min(progress, 100)}%;"></div>
+          <div style="background: ${goal.isPriority ? '#FFD700' : '#2196F3'}; height: 100%; width: ${Math.min(progress, 100)}%;"></div>
         </div>
       </div>
       <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #666;">

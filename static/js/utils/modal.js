@@ -5,7 +5,7 @@ import { showAlert } from "./alerts.js";
 
 let modalStack = [];
 
-export function showModal({ title, message = "", type = "confirm", preselectedType = "", prefill = {}, onConfirm, onCancel, isSubModal = false }) {
+export function showModal({ title, message = "", type = "confirm", preselectedType = "", prefill = {}, currentFilters = {}, availableCategories = [], onConfirm, onCancel, isSubModal = false }) {
   if (!isSubModal) {
     const existingModals = document.querySelectorAll('[id^="modal-"]');
     existingModals.forEach(m => m.remove());
@@ -35,19 +35,49 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
   let formContent = "";
 
   if (type === "contribute") {
-    const goalsOptions = (window.goals || [])
+    const allGoals = window.goals || [];
+    const activeGoals = allGoals.filter(g => {
+      const current = parseFloat(g.currentAmount) || 0;
+      const target = parseFloat(g.targetAmount) || 0;
+      return current < target;
+    });
+    const goalsWithBalance = allGoals.filter(g => (parseFloat(g.currentAmount) || 0) > 0);
+    
+    const activeGoalsOptions = activeGoals
       .map(g => `<option value="${g.id}">${g.title} (${g.currentAmount || 0} / ${g.targetAmount})</option>`)
       .join('');
     
+    const withdrawGoalsOptions = goalsWithBalance
+      .map(g => `<option value="${g.id}">${g.title} (${g.currentAmount || 0} available)</option>`)
+      .join('');
+    
     formContent = `
-      <label for="contrib-goal">Select Goal</label>
-      <select id="contrib-goal" required>
-        <option value="">Choose a goal...</option>
-        ${goalsOptions}
-      </select>
+      <label><span data-i18n="goal.operation_type">Operation Type</span></label>
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <button type="button" id="contrib-type-add" class="btn contrib-type-btn active" style="flex: 1; padding: 12px; border-radius: 10px; font-weight: 600; background: var(--accent-primary, #7c3aed); color: white; border: 2px solid var(--accent-primary, #7c3aed);">
+          ➕ <span data-i18n="goal.contribution">Contribution</span>
+        </button>
+        <button type="button" id="contrib-type-withdraw" class="btn contrib-type-btn" style="flex: 1; padding: 12px; border-radius: 10px; font-weight: 600; background: transparent; color: var(--text-primary, #333); border: 2px solid #e6e6ee;">
+          ➖ <span data-i18n="goal.withdrawal">Withdrawal</span>
+        </button>
+      </div>
+      <input type="hidden" id="contrib-operation" value="add" />
       
-      <label for="contrib-amount">Contribution Amount</label>
-      <input type="number" id="contrib-amount" step="0.01" min="0" placeholder="0.00" required />
+      <label for="contrib-goal"><span data-i18n="goal.select_goal">Select Goal</span></label>
+      <select id="contrib-goal" required>
+        <option value="" data-i18n="goal.choose_goal">Choose a goal...</option>
+        ${activeGoalsOptions}
+      </select>
+      <div id="contrib-goals-data" style="display: none;" data-active='${JSON.stringify(activeGoals.map(g => ({id: g.id, title: g.title, current: g.currentAmount, target: g.targetAmount})))}' data-withdraw='${JSON.stringify(goalsWithBalance.map(g => ({id: g.id, title: g.title, current: g.currentAmount})))}'></div>
+      
+      <label for="contrib-amount"><span data-i18n="goal.amount">Amount</span></label>
+      <input type="number" id="contrib-amount" step="0.01" min="0.01" placeholder="0.00" required />
+      <small id="contrib-help" style="color: var(--text-secondary, #666); font-size: 12px; display: block; margin-top: 4px;" data-i18n="goal.contribution_help">
+        Enter the amount to add to your goal
+      </small>
+      
+      <label for="contrib-note"><span data-i18n="goal.note">Note (Optional)</span></label>
+      <input type="text" id="contrib-note" placeholder="e.g., Monthly savings, Bonus" />
     `;
   } else if (type === "expense" || type === "income") {
     const selectedIncome = (preselectedType === "income" || type === "income") ? "selected" : "";
@@ -116,14 +146,25 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
     `;
   } else if (type === "goal") {
     formContent = `
-      <label for="goal-title">Goal Title</label>
+      <label for="goal-title"><span data-i18n="goal.title">Goal Title</span></label>
       <input type="text" id="goal-title" placeholder="e.g., New Car" required />
       
-      <label for="goal-target">Target Amount</label>
+      <label for="goal-target"><span data-i18n="goal.target_amount">Target Amount</span></label>
       <input type="number" id="goal-target" step="0.01" min="0" placeholder="0.00" required />
       
-      <label for="goal-date">Due Date</label>
+      <label for="goal-date"><span data-i18n="goal.due_date">Due Date</span></label>
       <input type="date" id="goal-date" required />
+      
+      <label for="goal-monthly"><span data-i18n="goal.monthly_contribution">Monthly Contribution (Optional)</span></label>
+      <input type="number" id="goal-monthly" step="0.01" min="0" placeholder="0.00" />
+      <small style="color: var(--text-secondary, #666); font-size: 12px; display: block; margin-top: 4px;" data-i18n="goal.monthly_help">
+        How much do you plan to save per month?
+      </small>
+      
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+        <input type="checkbox" id="goal-priority" style="width: auto; margin: 0;" />
+        <label for="goal-priority" style="margin: 0; font-weight: normal;" data-i18n="goal.mark_priority">⭐ Mark as priority goal</label>
+      </div>
     `;
   } else if (type === "custom-category") {
     const categoryType = message || "expense";
@@ -149,6 +190,41 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
       <small style="color: var(--text-secondary, #666); font-size: 12px; display: block; margin-top: 8px;">
         Copy/paste an emoji or use your keyboard's emoji picker
       </small>
+    `;
+  } else if (type === "filters") {
+    const selectedType = currentFilters?.type || 'all';
+    const selectedCategory = currentFilters?.category || 'all';
+    const showRecurring = currentFilters?.showRecurring !== false;
+    
+    let categoryOptions = '';
+    if (availableCategories instanceof Map) {
+      categoryOptions = Array.from(availableCategories.entries()).map(([id, displayName]) => 
+        `<option value="${id}" ${selectedCategory === id ? 'selected' : ''}>${displayName}</option>`
+      ).join('');
+    } else if (Array.isArray(availableCategories)) {
+      categoryOptions = availableCategories.map(cat => 
+        `<option value="${cat}" ${selectedCategory === cat ? 'selected' : ''}>${cat}</option>`
+      ).join('');
+    }
+    
+    formContent = `
+      <label for="filter-type"><span data-i18n="filter.type">Transaction Type</span></label>
+      <select id="filter-type">
+        <option value="all" ${selectedType === 'all' ? 'selected' : ''} data-i18n="filter.all_types">All Types</option>
+        <option value="income" ${selectedType === 'income' ? 'selected' : ''} data-i18n="filter.income_only">Income Only</option>
+        <option value="expense" ${selectedType === 'expense' ? 'selected' : ''} data-i18n="filter.expenses_only">Expenses Only</option>
+      </select>
+      
+      <label for="filter-category"><span data-i18n="filter.category">Category</span></label>
+      <select id="filter-category">
+        <option value="all" ${selectedCategory === 'all' ? 'selected' : ''} data-i18n="filter.all_categories">All Categories</option>
+        ${categoryOptions}
+      </select>
+      
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+        <input type="checkbox" id="filter-recurring" ${showRecurring ? 'checked' : ''} style="width: auto; margin: 0;" />
+        <label for="filter-recurring" style="margin: 0; font-weight: normal;" data-i18n="filter.show_recurring">Show Recurring Transactions</label>
+      </div>
     `;
   } else {
     formContent = `<p>${message}</p>`;
@@ -274,6 +350,75 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
       populatePaymentMethods();
       updatePaymentMethodVisibility();
     }, 50);
+  }
+  
+  const contribTypeAddBtn = modal.querySelector("#contrib-type-add");
+  const contribTypeWithdrawBtn = modal.querySelector("#contrib-type-withdraw");
+  const contribOperationInput = modal.querySelector("#contrib-operation");
+  const contribGoalSelect = modal.querySelector("#contrib-goal");
+  const contribHelpText = modal.querySelector("#contrib-help");
+  const contribNoteInput = modal.querySelector("#contrib-note");
+  const contribGoalsData = modal.querySelector("#contrib-goals-data");
+  
+  if (contribTypeAddBtn && contribTypeWithdrawBtn) {
+    const updateContribUI = (isWithdrawal) => {
+      if (isWithdrawal) {
+        contribTypeAddBtn.style.background = "transparent";
+        contribTypeAddBtn.style.color = "var(--text-primary, #333)";
+        contribTypeAddBtn.style.borderColor = "#e6e6ee";
+        contribTypeWithdrawBtn.style.background = "#ef4444";
+        contribTypeWithdrawBtn.style.color = "white";
+        contribTypeWithdrawBtn.style.borderColor = "#ef4444";
+        contribOperationInput.value = "withdraw";
+        if (contribHelpText) {
+          contribHelpText.textContent = "Enter the amount to withdraw from your goal";
+          contribHelpText.setAttribute("data-i18n", "goal.withdrawal_help");
+        }
+        if (contribNoteInput) {
+          contribNoteInput.placeholder = "e.g., Emergency expense, Medical bills";
+        }
+        
+        if (contribGoalsData && contribGoalSelect) {
+          const withdrawGoals = JSON.parse(contribGoalsData.dataset.withdraw || "[]");
+          contribGoalSelect.innerHTML = '<option value="">Choose a goal...</option>';
+          withdrawGoals.forEach(g => {
+            const opt = document.createElement("option");
+            opt.value = g.id;
+            opt.textContent = `${g.title} (${g.current} available)`;
+            contribGoalSelect.appendChild(opt);
+          });
+        }
+      } else {
+        contribTypeWithdrawBtn.style.background = "transparent";
+        contribTypeWithdrawBtn.style.color = "var(--text-primary, #333)";
+        contribTypeWithdrawBtn.style.borderColor = "#e6e6ee";
+        contribTypeAddBtn.style.background = "var(--accent-primary, #7c3aed)";
+        contribTypeAddBtn.style.color = "white";
+        contribTypeAddBtn.style.borderColor = "var(--accent-primary, #7c3aed)";
+        contribOperationInput.value = "add";
+        if (contribHelpText) {
+          contribHelpText.textContent = "Enter the amount to add to your goal";
+          contribHelpText.setAttribute("data-i18n", "goal.contribution_help");
+        }
+        if (contribNoteInput) {
+          contribNoteInput.placeholder = "e.g., Monthly savings, Bonus";
+        }
+        
+        if (contribGoalsData && contribGoalSelect) {
+          const activeGoals = JSON.parse(contribGoalsData.dataset.active || "[]");
+          contribGoalSelect.innerHTML = '<option value="">Choose a goal...</option>';
+          activeGoals.forEach(g => {
+            const opt = document.createElement("option");
+            opt.value = g.id;
+            opt.textContent = `${g.title} (${g.current || 0} / ${g.target})`;
+            contribGoalSelect.appendChild(opt);
+          });
+        }
+      }
+    };
+    
+    contribTypeAddBtn.addEventListener("click", () => updateContribUI(false));
+    contribTypeWithdrawBtn.addEventListener("click", () => updateContribUI(true));
   }
   
   const addCustomCategoryBtn = !isSubModal ? modal.querySelector("#add-custom-category") : null;
@@ -450,7 +595,11 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
     Object.keys(prefill).forEach((selector) => {
       const field = modal.querySelector(selector);
       if (field) {
-        field.value = prefill[selector];
+        if (field.type === 'checkbox') {
+          field.checked = !!prefill[selector];
+        } else {
+          field.value = prefill[selector];
+        }
       }
     });
   }, 0);

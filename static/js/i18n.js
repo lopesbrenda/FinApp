@@ -158,7 +158,40 @@ const translations = {
     'filter.category': 'Category',
     'filter.all_categories': 'All Categories',
     'filter.show_recurring': 'Show Recurring Transactions',
-    'filter.apply': 'Apply Filters'
+    'filter.apply': 'Apply Filters',
+    
+    // Goal & Projections
+    'goal.title': 'Goal Title',
+    'goal.target_amount': 'Target Amount',
+    'goal.due_date': 'Due Date',
+    'goal.monthly_contribution': 'Monthly Contribution (Optional)',
+    'goal.monthly_help': 'How much do you plan to save per month?',
+    'goal.mark_priority': '⭐ Mark as priority goal',
+    'goal.select_goal': 'Select Goal',
+    'goal.choose_goal': 'Choose a goal...',
+    'goal.amount': 'Amount',
+    'goal.amount_help': 'Use positive for contribution, negative for withdrawal',
+    'goal.note': 'Note (Optional)',
+    'goal.operation_type': 'Operation Type',
+    'goal.contribution': 'Contribution',
+    'goal.withdrawal': 'Withdrawal',
+    'goal.contribution_help': 'Enter the amount to add to your goal',
+    'goal.withdrawal_help': 'Enter the amount to withdraw from your goal',
+    
+    // Projections
+    'projection.estimated': 'Estimated',
+    'projection.remaining': 'remaining',
+    'projection.ahead_schedule': 'Ahead of schedule',
+    'projection.behind_schedule': 'Behind schedule',
+    'projection.on_track': 'On track',
+    'projection.set_monthly': 'Set monthly contribution to see projection',
+    
+    // Time units
+    'time.year': 'year',
+    'time.years': 'years',
+    'time.month': 'month',
+    'time.months': 'months',
+    'time.and': 'and'
   },
   pt: {
     // Navbar
@@ -317,7 +350,40 @@ const translations = {
     'filter.category': 'Categoria',
     'filter.all_categories': 'Todas as Categorias',
     'filter.show_recurring': 'Mostrar Transações Recorrentes',
-    'filter.apply': 'Aplicar Filtros'
+    'filter.apply': 'Aplicar Filtros',
+    
+    // Goal & Projections
+    'goal.title': 'Título da Meta',
+    'goal.target_amount': 'Valor Alvo',
+    'goal.due_date': 'Data Limite',
+    'goal.monthly_contribution': 'Contribuição Mensal (Opcional)',
+    'goal.monthly_help': 'Quanto você planeja economizar por mês?',
+    'goal.mark_priority': '⭐ Marcar como meta prioritária',
+    'goal.select_goal': 'Selecione a Meta',
+    'goal.choose_goal': 'Escolha uma meta...',
+    'goal.amount': 'Valor',
+    'goal.amount_help': 'Use positivo para contribuição, negativo para retirada',
+    'goal.note': 'Nota (Opcional)',
+    'goal.operation_type': 'Tipo de Operação',
+    'goal.contribution': 'Contribuição',
+    'goal.withdrawal': 'Retirada',
+    'goal.contribution_help': 'Digite o valor para adicionar à sua meta',
+    'goal.withdrawal_help': 'Digite o valor para retirar da sua meta',
+    
+    // Projections
+    'projection.estimated': 'Previsão',
+    'projection.remaining': 'restantes',
+    'projection.ahead_schedule': 'Adiantado',
+    'projection.behind_schedule': 'Atrasado',
+    'projection.on_track': 'No caminho certo',
+    'projection.set_monthly': 'Defina contribuição mensal para ver a projeção',
+    
+    // Time units
+    'time.year': 'ano',
+    'time.years': 'anos',
+    'time.month': 'mês',
+    'time.months': 'meses',
+    'time.and': 'e'
   }
 };
 

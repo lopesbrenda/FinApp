@@ -2,14 +2,20 @@ import { db } from "./firebase/firebase-config.js";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, serverTimestamp, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { COLLECTION } from "./firebase/firebase-dbs.js";
 
-export async function addGoal(userId, title, targetAmount, dueDate) {
+export async function addGoal(userId, title, targetAmount, dueDate, monthlyContribution = 0, isPriority = false) {
   try {
+    const now = Date.now();
     const docRef = await addDoc(collection(db, COLLECTION.GOALS), {
       uid: userId,
       title,
       targetAmount: Number(targetAmount),
       currentAmount: 0,
       dueDate,
+      monthlyContribution: Number(monthlyContribution) || 0,
+      isPriority: isPriority || false,
+      localProjectionStartAt: now,
+      projectionStartDate: serverTimestamp(),
+      projectionStartAmount: 0,
       createdAt: serverTimestamp()
     });
     return docRef.id;
@@ -63,19 +69,22 @@ export async function deleteGoal(goalId) {
   }
 }
 
-export async function addContribution(goalId, amount) {
+export async function addContribution(goalId, amount, note = '') {
   try {
     const contributionAmount = Number(amount);
-    if (isNaN(contributionAmount) || contributionAmount <= 0) {
+    if (isNaN(contributionAmount) || contributionAmount === 0) {
       throw new Error("Invalid contribution amount");
     }
     
     const goalRef = doc(db, COLLECTION.GOALS, goalId);
+    const contribution = { 
+      date: new Date().toISOString(), 
+      amount: contributionAmount,
+      note: note || ''
+    };
+    
     await updateDoc(goalRef, {
-      contributions: arrayUnion({ 
-        date: new Date().toISOString(), 
-        amount: contributionAmount 
-      })
+      contributions: arrayUnion(contribution)
     });
     
     const snap = await getDoc(goalRef);
@@ -86,11 +95,35 @@ export async function addContribution(goalId, amount) {
       return sum + (isNaN(amt) ? 0 : amt);
     }, 0);
     
-    await updateDoc(goalRef, { currentAmount: total });
+    const now = Date.now();
+    const updates = { 
+      currentAmount: total,
+      projectionStartAmount: total,
+      localProjectionStartAt: now,
+      projectionStartDate: serverTimestamp()
+    };
+    
+    if (!data.projectionStartDate && !data.localProjectionStartAt) {
+      updates.localProjectionStartAt = now;
+      updates.projectionStartDate = serverTimestamp();
+      updates.projectionStartAmount = 0;
+    }
+    
+    await updateDoc(goalRef, updates);
     
     const justCompleted = total >= data.targetAmount && (!data.completedAt);
     
-    return { success: true, justCompleted, currentAmount: total, targetAmount: data.targetAmount };
+    const isWithdrawal = contributionAmount < 0;
+    const isExtraContribution = contributionAmount > (data.monthlyContribution || 0) && contributionAmount > 0;
+    
+    return { 
+      success: true, 
+      justCompleted, 
+      currentAmount: total, 
+      targetAmount: data.targetAmount,
+      isWithdrawal,
+      isExtraContribution
+    };
   } catch (error) {
     console.error("Error adding contribution:", error);
     throw error;
