@@ -1,6 +1,7 @@
 import { db } from "./firebase/firebase-config.js";
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { COLLECTION } from "./firebase/firebase-dbs.js";
+import { logActivity } from "./services/activity-log.js";
 
 export const EXPENSE_CATEGORIES = [
   { id: "food", name: "Food & Dining", icon: "🍔" },
@@ -44,7 +45,21 @@ export async function addExpense(userId, transactionData) {
       }
     }
     
+    if (transactionData.description) {
+      data.description = transactionData.description;
+    }
+    if (transactionData.method) {
+      data.method = transactionData.method;
+    }
+    
     const docRef = await addDoc(collection(db, COLLECTION.TRANSACTIONS), data);
+    
+    const actionName = data.type === 'income' ? 'added_income' : 'added_expense';
+    await logActivity(actionName, COLLECTION.TRANSACTIONS, docRef.id, null, {
+      ...data,
+      id: docRef.id
+    });
+    
     return docRef.id;
   } catch (error) {
     console.error("Error adding expense:", error);
@@ -63,14 +78,31 @@ export async function getUserExpenses(userId) {
   }
 }
 
-export async function updateExpense(expenseId, amount, category, type) {
+export async function updateExpense(expenseId, amount, category, type, description) {
   try {
     const expenseRef = doc(db, COLLECTION.TRANSACTIONS, expenseId);
+    
+    let beforeData = null;
+    try {
+      const snap = await getDoc(expenseRef);
+      if (snap.exists()) beforeData = { id: expenseId, ...snap.data() };
+    } catch (e) {}
+    
     await updateDoc(expenseRef, {
       amount: Number(amount),
       category,
       type
     });
+    
+    const actionName = type === 'income' ? 'updated_income' : 'updated_expense';
+    await logActivity(actionName, COLLECTION.TRANSACTIONS, expenseId, beforeData, {
+      id: expenseId,
+      amount: Number(amount),
+      category,
+      type,
+      note: description || category
+    });
+    
     return true;
   } catch (error) {
     console.error("Error updating expense:", error);
@@ -78,10 +110,23 @@ export async function updateExpense(expenseId, amount, category, type) {
   }
 }
 
-export async function deleteExpense(expenseId) {
+export async function deleteExpense(expenseId, description) {
   try {
     const expenseRef = doc(db, COLLECTION.TRANSACTIONS, expenseId);
+    
+    let beforeData = null;
+    try {
+      const docSnap = await getDoc(expenseRef);
+      if (docSnap.exists()) {
+        beforeData = { id: expenseId, ...docSnap.data() };
+      }
+    } catch (e) {}
+    
     await deleteDoc(expenseRef);
+    
+    const actionName = beforeData?.type === 'income' ? 'deleted_income' : 'deleted_expense';
+    await logActivity(actionName, COLLECTION.TRANSACTIONS, expenseId, beforeData, null);
+    
     return true;
   } catch (error) {
     console.error("Error deleting expense:", error);

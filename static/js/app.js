@@ -1,6 +1,7 @@
 import { auth, db } from "./firebase/firebase-config.js";
 import { COLLECTION } from "./firebase/firebase-dbs.js";
 import { showAlert } from "./utils/alerts.js";
+import { logActivity } from "./services/activity-log.js";
 
 import {
   onAuthStateChanged,
@@ -55,7 +56,7 @@ onAuthStateChanged(auth, (user) => {
       setTimeout(() => (window.location.href = "/dashboard"), 300);
     }
   } else {
-    ["nav-dashboard", "nav-analytics", "nav-recurring", "nav-profile",  "logout-btn"].forEach(id => {
+    ["nav-dashboard", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
     });
@@ -73,13 +74,18 @@ onAuthStateChanged(auth, (user) => {
 
 /* LOGOUT handler */
 if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    signOut(auth)
-      .then(() => {
-        showAlert("Logged out successfully", "info");
-        window.location.href = "/home";
-      })
-      .catch((err) => showAlert("Logout error: " + err.message, "error"));
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        await logActivity("logout", COLLECTION.USERS, user.uid, null, { email: user.email });
+      }
+      await signOut(auth);
+      showAlert("Logged out successfully", "info");
+      window.location.href = "/home";
+    } catch (err) {
+      showAlert("Logout error: " + err.message, "error");
+    }
   });
 }
 

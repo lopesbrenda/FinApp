@@ -31,6 +31,9 @@
       <button class="sidebar-link" data-target="password-panel" data-i18n="sidebar.password">
         Password
       </button>
+      <button class="sidebar-link" data-target="activity-panel" data-i18n="sidebar.activity">
+        Activity Log
+      </button>
     </nav>
   </aside>
 
@@ -148,6 +151,51 @@
       <button type="submit" class="btn" data-i18n="password.change">Change Password</button>
       </div>
       </form>
+      </div>
+    </section>
+
+    <section id="activity-panel" class="panel">
+      <div class="card activity-log-card">
+        <div class="activity-header">
+          <h2 data-i18n="activity.title">📄 Activity Log</h2>
+          <p class="activity-subtitle" data-i18n="activity.subtitle">Tracking your actions for transparency and security.</p>
+        </div>
+
+        <div class="activity-filters">
+          <div class="filter-group">
+            <label data-i18n="activity.filter.period">Period</label>
+            <select id="activity-period-filter">
+              <option value="today" data-i18n="activity.filter.today">Today</option>
+              <option value="7days" selected data-i18n="activity.filter.7days">Last 7 days</option>
+              <option value="30days" data-i18n="activity.filter.30days">Last 30 days</option>
+              <option value="all" data-i18n="activity.filter.all">All time</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label data-i18n="activity.filter.action">Action type</label>
+            <select id="activity-action-filter">
+              <option value="all" data-i18n="activity.filter.all_actions">All actions</option>
+              <option value="transaction" data-i18n="activity.filter.transactions">Transactions</option>
+              <option value="goal" data-i18n="activity.filter.goals">Goals</option>
+              <option value="settings" data-i18n="activity.filter.settings">Settings</option>
+              <option value="login" data-i18n="activity.filter.login">Login/Logout</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label data-i18n="activity.filter.entity">Entity</label>
+            <select id="activity-entity-filter">
+              <option value="all" data-i18n="activity.filter.all_entities">All entities</option>
+              <option value="transaction" data-i18n="activity.filter.transaction">Transaction</option>
+              <option value="goal" data-i18n="activity.filter.goal">Goal</option>
+              <option value="settings" data-i18n="activity.filter.settings_entity">Settings</option>
+              <option value="profile" data-i18n="activity.filter.profile">Profile</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="activity-list" class="activity-list">
+          <div class="activity-empty" data-i18n="activity.empty">No activity found for the selected filters.</div>
+        </div>
       </div>
     </section>
 

@@ -15,6 +15,7 @@ import {
   updateProfile,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { getActivityLogs, groupLogsByDate, getActivityIcon, formatActivityMessage } from "../services/activity-log.js";
 
 // --------------------------------------------------------
 // Mini loader
@@ -429,5 +430,108 @@ if (options) {
 document.addEventListener("click", (e) => {
   if (box && !box.contains(e.target)) {
     box.classList.remove("open");
+  }
+});
+
+// --------------------------------------------------------
+// Activity Log
+// --------------------------------------------------------
+const activityPeriodFilter = document.getElementById("activity-period-filter");
+const activityActionFilter = document.getElementById("activity-action-filter");
+const activityEntityFilter = document.getElementById("activity-entity-filter");
+const activityList = document.getElementById("activity-list");
+
+let currentUserId = null;
+
+async function loadActivityLogs() {
+  if (!currentUserId || !activityList) return;
+  
+  const filters = {
+    period: activityPeriodFilter?.value || '7days',
+    actionType: activityActionFilter?.value || 'all',
+    entity: activityEntityFilter?.value || 'all'
+  };
+  
+  showLoader(true);
+  
+  try {
+    const logs = await getActivityLogs(currentUserId, filters);
+    renderActivityLogs(logs);
+  } catch (error) {
+    console.error("Error loading activity logs:", error);
+    activityList.innerHTML = '<div class="activity-empty">Error loading activity logs.</div>';
+  } finally {
+    showLoader(false);
+  }
+}
+
+function renderActivityLogs(logs) {
+  if (!activityList) return;
+  
+  if (!logs || logs.length === 0) {
+    activityList.innerHTML = '<div class="activity-empty" data-i18n="activity.empty">No activity found for the selected filters.</div>';
+    return;
+  }
+  
+  const grouped = groupLogsByDate(logs);
+  const lang = localStorage.getItem('language') || 'en';
+  
+  const dayLabels = {
+    'today': lang === 'pt' ? 'Hoje' : 'Today',
+    'yesterday': lang === 'pt' ? 'Ontem' : 'Yesterday'
+  };
+  
+  let html = '';
+  
+  for (const [dateKey, dayLogs] of Object.entries(grouped)) {
+    const displayDate = dayLabels[dateKey] || dateKey;
+    
+    html += `<div class="activity-day-group">`;
+    html += `<div class="activity-day-header">${displayDate}</div>`;
+    
+    dayLogs.forEach(log => {
+      const icon = getActivityIcon(log.action);
+      const message = formatActivityMessage(log);
+      const timestamp = log.createdAt?.toDate?.() || new Date(log.createdAt);
+      const timeStr = timestamp && !isNaN(timestamp) ? timestamp.toLocaleTimeString(lang === 'pt' ? 'pt-BR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+      
+      html += `
+        <div class="activity-item">
+          <div class="activity-icon">${icon}</div>
+          <div class="activity-content">
+            <div class="activity-message">${message}</div>
+            <div class="activity-time">${timeStr}</div>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += `</div>`;
+  }
+  
+  activityList.innerHTML = html;
+}
+
+if (activityPeriodFilter) {
+  activityPeriodFilter.addEventListener("change", loadActivityLogs);
+}
+if (activityActionFilter) {
+  activityActionFilter.addEventListener("change", loadActivityLogs);
+}
+if (activityEntityFilter) {
+  activityEntityFilter.addEventListener("change", loadActivityLogs);
+}
+
+document.querySelectorAll(".sidebar-link").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.target === "activity-panel") {
+      loadActivityLogs();
+    }
+  });
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUserId = user.uid;
   }
 });

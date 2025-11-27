@@ -11,6 +11,7 @@ import {
 import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { showAlert } from "../utils/alerts.js";
 import { COLLECTION } from "../firebase/firebase-dbs.js";
+import { logActivity } from "../services/activity-log.js";
 
 // ========================================
 // LOGIN
@@ -31,7 +32,10 @@ if (loginForm) {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      await logActivity("login", COLLECTION.USERS, userCredential.user.uid, null, { email });
+      
       showAlert("Login successful!", "success");
       setTimeout(() => {
         window.location.href = "/dashboard";
