@@ -34,7 +34,7 @@ if (loginForm) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      await logActivity("login", COLLECTION.USERS, userCredential.user.uid, null, { email });
+      await logActivity("login", "user_db", userCredential.user.uid, null, { email });
       
       showAlert("Login successful!", "success");
       setTimeout(() => {

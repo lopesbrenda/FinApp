@@ -22,7 +22,7 @@ export async function addGoal(userId, title, targetAmount, dueDate, monthlyContr
     
     const docRef = await addDoc(collection(db, COLLECTION.GOALS), goalData);
     
-    await logActivity("added_goal", COLLECTION.GOAL, docRef.id, null, {
+    await logActivity("added_goal", "goals_db", docRef.id, null, {
       ...goalData,
       id: docRef.id,
       name: title
@@ -90,7 +90,7 @@ export async function deleteGoal(goalId, goalName) {
     
     await deleteDoc(goalRef);
     
-    await logActivity("deleted_goal", COLLECTION.GOAL, goalId, beforeData, null);
+    await logActivity("deleted_goal", "goals_db", goalId, beforeData, null);
     
     return true;
   } catch (error) {
@@ -147,7 +147,7 @@ export async function addContribution(goalId, amount, note = '') {
     const isExtraContribution = contributionAmount > (data.monthlyContribution || 0) && contributionAmount > 0;
     
     const actionName = isWithdrawal ? "withdrawal_goal" : "contribution_goal";
-    await logActivity(actionName, COLLECTION.GOALS, goalId, 
+    await logActivity(actionName, "goals_db", goalId, 
       { currentAmount: data.currentAmount || 0, name: data.title },
       { currentAmount: total, amount: Math.abs(contributionAmount), name: data.title }
     );
@@ -191,7 +191,7 @@ export async function markAsAchieved(goalId, goalName) {
       achieved: true
     });
     
-    await logActivity("completed_goal", COLLECTION.GOALS, goalId, beforeData, {
+    await logActivity("completed_goal", "goals_db", goalId, beforeData, {
       ...beforeData,
       completedAt: new Date().toISOString(),
       achieved: true
@@ -234,7 +234,7 @@ export async function archiveGoal(goalId) {
       achieved: true
     });
     
-    await logActivity("archived_goal", COLLECTION.GOALS, goalId, 
+    await logActivity("archived_goal", "goals_db", goalId, 
       { id: goalId, ...data },
       { id: goalId, ...data, archived: true }
     );
@@ -269,7 +269,7 @@ export async function unarchiveGoal(goalId) {
       archivedAt: null
     });
     
-    await logActivity("unarchived_goal", COLLECTION.GOALS, goalId, beforeData, {
+    await logActivity("unarchived_goal", "goals_db", goalId, beforeData, {
       ...beforeData,
       archived: false
     });

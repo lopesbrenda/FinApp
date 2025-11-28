@@ -1,4 +1,3 @@
-# @@ auth.py
 """
 Authentication blueprint - handles login/logout with Firebase Auth.
 Validates JWT tokens from frontend and creates Flask sessions.

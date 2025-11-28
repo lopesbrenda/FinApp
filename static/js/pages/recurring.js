@@ -10,6 +10,16 @@ let currencySymbol = '$';
 let allRecurring = [];
 let currentFilter = 'all';
 
+function getCurrencySymbol(currency) {
+  const symbols = {
+    'USD': '$',
+    'EUR': '€',
+    'BRL': 'R$',
+    'GBP': '£'
+  };
+  return symbols[currency] || '$';
+}
+
 function formatCurrency(amount) {
   const num = parseFloat(amount) || 0;
   return `${currencySymbol}${num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
@@ -108,7 +118,7 @@ async function loadUserPreferences(userId) {
     if (userDoc.exists()) {
       const data = userDoc.data();
       if (data.preferences?.currency) {
-        currencySymbol = data.preferences.currency;
+        currencySymbol = getCurrencySymbol(data.preferences.currency);
       }
     }
   } catch (error) {

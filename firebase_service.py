@@ -1,4 +1,8 @@
 # @@ firebase_service.py
+"""
+Firebase Admin SDK service for backend operations.
+Handles server-side Firebase operations (Firestore, Storage, Auth validation).
+"""
 
 import firebase_admin
 from firebase_admin import credentials, firestore, auth as admin_auth

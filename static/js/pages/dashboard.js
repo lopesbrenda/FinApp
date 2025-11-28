@@ -12,6 +12,8 @@ import { showGoalCompletionModal } from "../utils/goal-completion-modal.js";
 import { i18n } from "../i18n.js";
 import { calculateProjection, calculateProjectionStatus, formatProjectionTime, formatExpectedDate } from "../utils/projections.js";
 import { normalizeGoalRecords, persistLegacyProjectionFields } from "../utils/goal-normalizer.js";
+import { validateAmount } from "../services/currency-service.js";
+import { subscribeToAccounts, getTotalBalance, ACCOUNT_TYPES } from "../services/accounts-service.js";
 
 function getCurrencySymbol(currency) {
   const symbols = {
@@ -29,6 +31,8 @@ function safeNumber(v) {
 }
 
 let refreshDashboardTimeout = null;
+let accountsUnsubscribe = null;
+window.accounts = [];
 
 function debouncedRefreshDashboard() {
   if (refreshDashboardTimeout) {
@@ -37,6 +41,43 @@ function debouncedRefreshDashboard() {
   refreshDashboardTimeout = setTimeout(() => {
     refreshDashboard();
   }, 300);
+}
+
+function updateAccountsSummary(accounts) {
+  window.accounts = accounts;
+  
+  const symbol = getCurrencySymbol(window.currency);
+  
+  const bankAccounts = accounts.filter(a => 
+    a.type === 'checking' || a.type === 'savings' || a.type === 'debit_card' || a.type === 'investment'
+  );
+  const creditCards = accounts.filter(a => a.type === 'credit_card');
+  const cashAccounts = accounts.filter(a => a.type === 'cash');
+  
+  const bankTotal = bankAccounts.reduce((sum, a) => sum + (Number(a.currentBalance) || 0), 0);
+  const creditDebt = creditCards.reduce((sum, a) => sum + (Number(a.currentBalance) || 0), 0);
+  const cashTotal = cashAccounts.reduce((sum, a) => sum + (Number(a.currentBalance) || 0), 0);
+  const netWorth = bankTotal + cashTotal - creditDebt;
+  
+  const accountBalanceEl = document.getElementById("account-balance-amount");
+  if (accountBalanceEl) {
+    accountBalanceEl.textContent = `${symbol} ${netWorth.toFixed(2)}`;
+  }
+  
+  const bankBalanceEl = document.getElementById("bank-balance-amount");
+  if (bankBalanceEl) {
+    bankBalanceEl.textContent = `${symbol} ${bankTotal.toFixed(2)}`;
+  }
+  
+  const creditDebtEl = document.getElementById("credit-debt-amount");
+  if (creditDebtEl) {
+    creditDebtEl.textContent = `${symbol} ${creditDebt.toFixed(2)}`;
+  }
+  
+  const cashBalanceEl = document.getElementById("cash-balance-amount");
+  if (cashBalanceEl) {
+    cashBalanceEl.textContent = `${symbol} ${cashTotal.toFixed(2)}`;
+  }
 }
 
 // Register button event listeners BEFORE auth check (so they work even without Firebase configured)
@@ -93,6 +134,8 @@ if (addIncomeBtn) {
           const categoryEl = modalInstance.getField("#exp-category");
           const typeEl = modalInstance.getField("#exp-type");
           const dateEl = modalInstance.getField("#exp-date");
+          const currencyEl = modalInstance.getField("#exp-currency");
+          const accountEl = modalInstance.getField("#exp-account");
           const recurringEl = modalInstance.getField("#exp-recurring");
           const notesEl = modalInstance.getField("#exp-notes");
 
@@ -100,10 +143,23 @@ if (addIncomeBtn) {
             showAlert("Fill all fields.", "error");
             return false;
           }
+          
+          const accountId = accountEl?.value || "";
+          if (!accountId) {
+            showAlert("Please select an account.", "error");
+            return false;
+          }
 
-          const amount = parseFloat(amountEl.value) || 0;
+          const validation = validateAmount(amountEl.value);
+          if (!validation.valid) {
+            showAlert(validation.error, "error");
+            return false;
+          }
+          
+          const amount = validation.value;
           const category = categoryEl.value.trim();
           const date = dateEl.value;
+          const currency = currencyEl?.value || "EUR";
           const notes = notesEl?.value?.trim() || "";
           const isRecurring = recurringEl ? recurringEl.checked : false;
 
@@ -112,6 +168,8 @@ if (addIncomeBtn) {
             category,
             type: "income",
             date,
+            currency,
+            accountId,
             isRecurring
           };
           
@@ -167,7 +225,9 @@ if (addExpenseBtn) {
           const categoryEl = modalInstance.getField("#exp-category");
           const typeEl = modalInstance.getField("#exp-type");
           const dateEl = modalInstance.getField("#exp-date");
+          const currencyEl = modalInstance.getField("#exp-currency");
           const paymentMethodEl = modalInstance.getField("#exp-payment-method");
+          const accountEl = modalInstance.getField("#exp-account");
           const recurringEl = modalInstance.getField("#exp-recurring");
           const notesEl = modalInstance.getField("#exp-notes");
 
@@ -175,10 +235,23 @@ if (addExpenseBtn) {
             showAlert("Fill all fields.", "error");
             return false;
           }
+          
+          const accountId = accountEl?.value || "";
+          if (!accountId) {
+            showAlert("Please select an account.", "error");
+            return false;
+          }
 
-          const amount = parseFloat(amountEl.value) || 0;
+          const validation = validateAmount(amountEl.value);
+          if (!validation.valid) {
+            showAlert(validation.error, "error");
+            return false;
+          }
+          
+          const amount = validation.value;
           const category = categoryEl.value.trim();
           const date = dateEl.value;
+          const currency = currencyEl?.value || "EUR";
           const paymentMethod = paymentMethodEl?.value;
           const notes = notesEl?.value?.trim() || "";
           
@@ -193,7 +266,9 @@ if (addExpenseBtn) {
             category,
             type: "expense",
             date,
+            currency,
             paymentMethod,
+            accountId,
             isRecurring
           };
           
@@ -384,22 +459,12 @@ if (contributeGoalBtn) {
           const operation = operationEl ? operationEl.value : "add";
           const note = noteEl ? noteEl.value.trim() : '';
 
-          console.log("DEBUG Contribution:", {
-            goalId,
-            rawAmountValue: amountEl.value,
-            rawAmount,
-            operation,
-            operationElValue: operationEl?.value,
-            note
-          });
-
           if (rawAmount <= 0) {
             showAlert("Amount must be greater than zero.", "error");
             return false;
           }
           
           const amount = operation === "withdraw" ? -rawAmount : rawAmount;
-          console.log("DEBUG Final amount:", amount);
 
           const result = await addContribution(goalId, amount, note);
           await refreshDashboard();
@@ -489,6 +554,10 @@ if (filtersBtn) {
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
     console.log("🚫 Not logged in — redirecting to login...");
+    if (accountsUnsubscribe) {
+      accountsUnsubscribe();
+      accountsUnsubscribe = null;
+    }
     window.location.href = "/login";
     return;
   }
@@ -513,6 +582,14 @@ auth.onAuthStateChanged(async (user) => {
   }
   
   await refreshDashboard();
+  
+  if (accountsUnsubscribe) {
+    accountsUnsubscribe();
+  }
+  accountsUnsubscribe = subscribeToAccounts(user.uid, (accounts) => {
+    console.log("📊 Accounts updated in real-time:", accounts.length);
+    updateAccountsSummary(accounts);
+  });
   
   onSnapshot(userRef, (snap) => {
     if (snap.exists()) {
@@ -858,12 +935,20 @@ function renderExpensesList(expenses = []) {
       
       const isVirtual = exp.virtualOccurrence;
       const isFuture = exp.isPast === false;
+      
+      const baseCurrency = window.currency || 'EUR';
+      const expCurrency = exp.currency || baseCurrency;
+      const wasConverted = exp.originalAmount && exp.currency && exp.currency !== baseCurrency;
+      const originalAmount = exp.originalAmount ? safeNumber(exp.originalAmount).toFixed(2) : null;
+      const currencySymbols = { EUR: '€', USD: '$', BRL: 'R$', GBP: '£' };
+      const expSymbol = currencySymbols[expCurrency] || expCurrency;
 
       const div = document.createElement("div");
       div.style.cssText = `border-bottom: 1px solid #f5f5f5; padding: 14px 0; display: flex; justify-content: space-between; align-items: center; ${isFuture ? 'opacity: 0.6;' : ''}`;
       
       const recurringBadge = exp.isRecurring ? `<span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">🔄 ${recurringLabel.replace('🔄 ', '')}</span>` : '';
       const futureBadge = isFuture ? `<span style="background: #fff3e0; color: #f57c00; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">Upcoming</span>` : '';
+      const conversionInfo = wasConverted ? `<span style="color: #999; font-size: 0.75rem; margin-left: 4px;" title="Converted from ${expSymbol} ${originalAmount}">💱</span>` : '';
       
       div.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
@@ -876,11 +961,12 @@ function renderExpensesList(expenses = []) {
             </div>
             <div style="color: #999; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
               <span>${paymentIcon} ${exp.paymentMethod || 'cash'}</span>
+              ${wasConverted ? `<span style="font-size: 0.75rem;">💱 ${expSymbol} ${originalAmount}</span>` : ''}
             </div>
           </div>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <span style="color: ${color}; font-weight: bold; font-size: 1.1rem;">${sign} ${symbol} ${amount}</span>
+          <span style="color: ${color}; font-weight: bold; font-size: 1.1rem;">${sign} ${symbol} ${amount}${conversionInfo}</span>
           ${!isVirtual ? `<button class="btn-small btn-danger" data-id="${exp.id}" data-action="delete" data-type="${exp.type}" style="cursor: pointer;">Delete</button>` : ''}
         </div>
       `;

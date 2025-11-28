@@ -137,16 +137,6 @@ export function checkExpenseNotifications(expenses, userPreferences) {
     return;
   }
 
-  const lastShownKey = "lastExpenseNotificationCheck";
-  const lastShown = localStorage.getItem(lastShownKey);
-  const todayStr = today.toISOString().split('T')[0];
-
-  if (lastShown === todayStr) {
-    return;
-  }
-
-  localStorage.setItem(lastShownKey, todayStr);
-
   notifications.sort((a, b) => a.priority - b.priority);
 
   showExpenseNotificationModal(notifications);

@@ -10,23 +10,53 @@
 
 <div class="card-grid">
   <div class="card">
-    <h3 data-i18n="dashboard.balance">💰 Total Balance</h3>
-    <h2 id="balance-amount" style="color: var(--accent, #6c21e4); margin: 16px 0;">$0.00</h2>
+    <h3>🏦 Net Worth</h3>
+    <h2 id="account-balance-amount" style="color: var(--accent, #6c21e4); margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">All accounts</p>
+  </div>
+  
+  <div class="card">
+    <h3>💳 Bank Accounts</h3>
+    <h2 id="bank-balance-amount" style="color: #4caf50; margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">Checking & Savings</p>
+  </div>
+  
+  <div class="card">
+    <h3>💵 Cash</h3>
+    <h2 id="cash-balance-amount" style="color: #2196F3; margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">Cash on hand</p>
+  </div>
+
+  <div class="card">
+    <h3>💳 Credit Card Debt</h3>
+    <h2 id="credit-debt-amount" style="color: #f44336; margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">Outstanding balance</p>
+  </div>
+</div>
+
+<div class="card-grid" style="margin-top: 20px;">
+  <div class="card">
+    <h3 data-i18n="dashboard.income">📈 Income</h3>
+    <h2 id="income-amount" style="color: #4caf50; margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">This period</p>
   </div>
   
   <div class="card">
     <h3 data-i18n="dashboard.expenses">📉 Expenses</h3>
     <h2 id="expenses-amount" style="color: #f44336; margin: 16px 0;">$0.00</h2>
-  </div>
-  
-  <div class="card">
-    <h3 data-i18n="dashboard.income">📈 Income</h3>
-    <h2 id="income-amount" style="color: #4caf50; margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">This period</p>
   </div>
 
   <div class="card">
     <h3 data-i18n="dashboard.goals">🎯 Goals</h3>
     <h2 id="goals-amount" style="color: #2196F3; margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">Target amount</p>
+  </div>
+  
+  <div class="card">
+    <h3 data-i18n="dashboard.balance">💰 Cash Flow</h3>
+    <h2 id="balance-amount" style="color: var(--accent, #6c21e4); margin: 16px 0;">$0.00</h2>
+    <p style="font-size: 0.85rem; color: #888;">Income - Expenses</p>
   </div>
 </div>
 

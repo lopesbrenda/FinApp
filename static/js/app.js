@@ -34,7 +34,7 @@ onAuthStateChanged(auth, (user) => {
     if (userNameEl) userNameEl.textContent = user.displayName || "User";
     if (userEmailEl) userEmailEl.textContent = user.email;
 
-    ["nav-dashboard", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
+    ["nav-dashboard", "nav-accounts", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "inline-block";
     });
@@ -56,7 +56,7 @@ onAuthStateChanged(auth, (user) => {
       setTimeout(() => (window.location.href = "/dashboard"), 300);
     }
   } else {
-    ["nav-dashboard", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
+    ["nav-dashboard", "nav-accounts", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
     });
@@ -65,7 +65,7 @@ onAuthStateChanged(auth, (user) => {
       if (el) el.style.display = "inline-block";
     });
 
-    if (["/dashboard", "/profile", "/analytics", "/recurring"].includes(path)) {
+    if (["/dashboard", "/profile", "/analytics", "/recurring", "/accounts"].includes(path)) {
       console.log("🚫 Not logged in — redirecting to login...");
       setTimeout(() => (window.location.href = "/login"), 400);
     }
@@ -78,7 +78,7 @@ if (logoutBtn) {
     try {
       const user = auth.currentUser;
       if (user) {
-        await logActivity("logout", COLLECTION.USERS, user.uid, null, { email: user.email });
+        await logActivity("logout", "user_db", user.uid, null, { email: user.email });
       }
       await signOut(auth);
       showAlert("Logged out successfully", "info");

@@ -77,16 +77,6 @@ export function checkGoalNotifications(goals, userPreferences) {
 
   notifications.sort((a, b) => a.priority - b.priority);
 
-  const lastShownKey = "lastGoalNotificationCheck";
-  const lastShown = localStorage.getItem(lastShownKey);
-  const todayStr = today.toISOString().split('T')[0];
-
-  if (lastShown === todayStr) {
-    return;
-  }
-
-  localStorage.setItem(lastShownKey, todayStr);
-
   showGoalNotificationModal(notifications);
 }
 
@@ -144,7 +134,7 @@ function showGoalNotificationModal(notifications) {
               <div style="background: #e0e0e0; height: 6px; border-radius: 3px; overflow: hidden;">
                 <div style="background: ${color}; height: 100%; width: ${progress}%;"></div>
               </div>
-              <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #ffffffff;">Progress: ${progress}%</p>
+              <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">Progress: ${progress}%</p>
             </div>
           </div>
         </div>

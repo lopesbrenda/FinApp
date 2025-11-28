@@ -28,11 +28,8 @@ class Config:
     FIREBASE_COLLECTIONS = {
         "userCollection": os.getenv("FIREBASE_DB_USER", "users"),
         "transactionCollection": os.getenv("FIREBASE_DB_TRANSACTION", "transactions"),
-        "budgetCollection": os.getenv("FIREBASE_DB_BUDGET", "budgets"),
-
-        "categoryCollection": os.getenv("FIREBASE_DB_CATEGORY", "categories"),
-        "currencyCollection": os.getenv("FIREBASE_DB_CURRENCY", "currencies"),
-        
+        "budgetCollection": os.getenv("FIREBASE_DB_BUDGET", "budgets"),       
         "goalsCollection": os.getenv("FIREBASE_DB_GOALS", "goals"),
-        "activityLogsCollection": os.getenv("FIREBASE_DB_ACTIVITY_LOGS", "activity_logs")
+        "activityLogsCollection": os.getenv("FIREBASE_DB_ACTIVITY_LOGS", "activity_logs"),
+        "accountsCollection": os.getenv("FIREBASE_DB_ACCOUNTS", "accounts")
     }

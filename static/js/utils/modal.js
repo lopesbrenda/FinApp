@@ -2,10 +2,11 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../expenses.js";
 import { userPreferencesService } from "../services/user-preferences.js";
 import { auth } from "../firebase/firebase-config.js";
 import { showAlert } from "./alerts.js";
+import { validateAmount, convertToBaseCurrency, formatCurrency, getBaseCurrency } from "../services/currency-service.js";
 
 let modalStack = [];
 
-export function showModal({ title, message = "", type = "confirm", preselectedType = "", prefill = {}, currentFilters = {}, availableCategories = [], onConfirm, onCancel, isSubModal = false }) {
+export function showModal({ title, message = "", type = "confirm", content = "", confirmText = "", confirmClass = "", preselectedType = "", prefill = {}, currentFilters = {}, availableCategories = [], onConfirm, onCancel, onOpen, isSubModal = false }) {
   if (!isSubModal) {
     const existingModals = document.querySelectorAll('[id^="modal-"]');
     existingModals.forEach(m => m.remove());
@@ -33,8 +34,10 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
   }
 
   let formContent = "";
-
-  if (type === "contribute") {
+  
+  if (content) {
+    formContent = content;
+  } else if (type === "contribute") {
     const allGoals = window.goals || [];
     const activeGoals = allGoals.filter(g => {
       const current = parseFloat(g.currentAmount) || 0;
@@ -117,8 +120,30 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
         </div>
       </div>
       
+      <div id="account-container">
+        <label for="exp-account">Account</label>
+        <select id="exp-account" style="width: 100%;" required>
+          <option value="">Select account...</option>
+        </select>
+        <small style="color: var(--text-secondary, #666); font-size: 12px; display: block; margin-top: 4px;">
+          Select the account for this transaction
+        </small>
+      </div>
+      
       <label for="exp-amount">Amount</label>
-      <input type="number" id="exp-amount" step="0.01" min="0" placeholder="0.00" required />
+      <div style="display: flex; gap: 8px; align-items: stretch;">
+        <input type="text" id="exp-amount" inputmode="decimal" placeholder="0.00" required style="flex: 1;" />
+        <select id="exp-currency" style="width: 90px; flex-shrink: 0;">
+          <option value="EUR">€ EUR</option>
+          <option value="USD">$ USD</option>
+          <option value="BRL">R$ BRL</option>
+          <option value="GBP">£ GBP</option>
+        </select>
+      </div>
+      <div id="currency-conversion-preview" style="display: none; margin-top: 6px; padding: 8px 12px; background: var(--bg-secondary, #f5f5f5); border-radius: 8px; font-size: 13px; color: var(--text-secondary, #666);">
+        <span id="conversion-text"></span>
+      </div>
+      <div id="amount-error" style="display: none; color: #e53935; font-size: 12px; margin-top: 4px;"></div>
       
       <label for="exp-date">Date</label>
       <input type="date" id="exp-date" value="${today}" required />
@@ -230,6 +255,9 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
     formContent = `<p>${message}</p>`;
   }
 
+  const confirmBtnText = confirmText || (type === "confirm" ? "OK" : "Save");
+  const confirmBtnClass = confirmClass ? `btn ${confirmClass}` : "btn";
+  
   modal.innerHTML = `
     <div class="modal-box">
       <h2>${title}</h2>
@@ -238,7 +266,7 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
-        <button class="btn modal-confirm-btn">${type === "confirm" ? "OK" : "Save"}</button>
+        <button class="${confirmBtnClass} modal-confirm-btn">${confirmBtnText}</button>
       </div>
     </div>
   `;
@@ -246,13 +274,44 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
   document.body.appendChild(modal);
 
   setTimeout(() => modal.classList.add("show"), 10);
+  
+  if (onOpen && typeof onOpen === 'function') {
+    onOpen(modalInstance);
+  }
 
   const typeSelect = !isSubModal ? modal.querySelector("#exp-type") : null;
   const categorySelect = !isSubModal ? modal.querySelector("#exp-category") : null;
   const paymentMethodSelect = !isSubModal ? modal.querySelector("#exp-payment-method") : null;
   const paymentMethodContainer = !isSubModal ? modal.querySelector("#payment-method-container") : null;
+  const accountSelect = !isSubModal ? modal.querySelector("#exp-account") : null;
   const recurringCheckbox = !isSubModal ? modal.querySelector("#exp-recurring") : null;
   const recurringOptions = !isSubModal ? modal.querySelector("#recurring-options") : null;
+
+  const populateAccounts = async () => {
+    if (!accountSelect) return;
+    
+    accountSelect.innerHTML = '<option value="">Select account...</option>';
+    
+    if (auth.currentUser) {
+      try {
+        const { getUserAccounts, ACCOUNT_ICONS } = await import("../services/accounts-service.js");
+        const accounts = await getUserAccounts(auth.currentUser.uid);
+        
+        if (accounts.length > 0) {
+          accounts.forEach(account => {
+            const option = document.createElement("option");
+            option.value = account.id;
+            const icon = account.icon || ACCOUNT_ICONS[account.type] || '🏦';
+            const balance = Number(account.currentBalance || 0).toFixed(2);
+            option.textContent = `${icon} ${account.name}${account.bank ? ` (${account.bank})` : ''} - ${balance}`;
+            accountSelect.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error("Error loading accounts:", error);
+      }
+    }
+  };
 
   const populatePaymentMethods = async () => {
     if (!paymentMethodSelect) return;
@@ -348,6 +407,7 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
         populateCategories();
       }
       populatePaymentMethods();
+      populateAccounts();
       updatePaymentMethodVisibility();
     }, 50);
   }
@@ -529,6 +589,84 @@ export function showModal({ title, message = "", type = "confirm", preselectedTy
   if (recurringCheckbox && recurringOptions) {
     recurringCheckbox.addEventListener("change", (e) => {
       recurringOptions.style.display = e.target.checked ? "block" : "none";
+    });
+  }
+
+  const amountInput = modal.querySelector("#exp-amount");
+  const currencySelect = modal.querySelector("#exp-currency");
+  const conversionPreview = modal.querySelector("#currency-conversion-preview");
+  const conversionText = modal.querySelector("#conversion-text");
+  const amountError = modal.querySelector("#amount-error");
+  
+  if (amountInput && currencySelect) {
+    const userCurrency = userPreferencesService?.currentPreferences?.currency || getBaseCurrency();
+    if (currencySelect.querySelector(`option[value="${userCurrency}"]`)) {
+      currencySelect.value = userCurrency;
+    }
+    
+    let conversionTimeout = null;
+    
+    const updateConversionPreview = async () => {
+      const rawValue = amountInput.value;
+      const currency = currencySelect.value;
+      const baseCurrency = getBaseCurrency();
+      
+      if (!rawValue || currency === baseCurrency) {
+        if (conversionPreview) conversionPreview.style.display = "none";
+        return;
+      }
+      
+      const validation = validateAmount(rawValue);
+      if (!validation.valid) {
+        if (conversionPreview) conversionPreview.style.display = "none";
+        return;
+      }
+      
+      try {
+        const result = await convertToBaseCurrency(validation.value, currency);
+        if (conversionPreview && conversionText) {
+          conversionText.textContent = `💱 ≈ ${formatCurrency(result.convertedAmount, baseCurrency)} (rate: ${result.exchangeRate.toFixed(4)})`;
+          conversionPreview.style.display = "block";
+        }
+      } catch (error) {
+        console.error("Conversion error:", error);
+        if (conversionPreview) conversionPreview.style.display = "none";
+      }
+    };
+    
+    const validateAndPreview = () => {
+      const rawValue = amountInput.value;
+      
+      if (!rawValue) {
+        if (amountError) amountError.style.display = "none";
+        if (conversionPreview) conversionPreview.style.display = "none";
+        amountInput.style.borderColor = "";
+        return;
+      }
+      
+      const validation = validateAmount(rawValue);
+      
+      if (!validation.valid) {
+        if (amountError) {
+          amountError.textContent = validation.error;
+          amountError.style.display = "block";
+        }
+        amountInput.style.borderColor = "#e53935";
+        if (conversionPreview) conversionPreview.style.display = "none";
+      } else {
+        if (amountError) amountError.style.display = "none";
+        amountInput.style.borderColor = "#4caf50";
+        
+        if (conversionTimeout) clearTimeout(conversionTimeout);
+        conversionTimeout = setTimeout(updateConversionPreview, 300);
+      }
+    };
+    
+    amountInput.addEventListener("input", validateAndPreview);
+    currencySelect.addEventListener("change", () => {
+      if (amountInput.value) {
+        validateAndPreview();
+      }
     });
   }
 

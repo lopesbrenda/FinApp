@@ -1,0 +1,76 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="accounts-page">
+  <div class="page-header">
+    <h1 data-i18n="accounts.title">🏦 Accounts & Cards</h1>
+    <p data-i18n="accounts.subtitle">Manage your bank accounts and credit cards</p>
+  </div>
+
+  <div class="accounts-summary">
+    <div class="summary-card total-balance">
+      <div class="summary-icon">💰</div>
+      <div class="summary-info">
+        <span class="summary-label" data-i18n="accounts.total_balance">Total Balance</span>
+        <span class="summary-value" id="total-balance">$0.00</span>
+      </div>
+    </div>
+    <div class="summary-card bank-accounts">
+      <div class="summary-icon">🏦</div>
+      <div class="summary-info">
+        <span class="summary-label" data-i18n="accounts.bank_accounts">Bank Accounts</span>
+        <span class="summary-value" id="bank-balance">$0.00</span>
+      </div>
+    </div>
+    <div class="summary-card credit-cards">
+      <div class="summary-icon">💳</div>
+      <div class="summary-info">
+        <span class="summary-label" data-i18n="accounts.credit_debt">Credit Card Debt</span>
+        <span class="summary-value" id="credit-debt">$0.00</span>
+      </div>
+    </div>
+    <div class="summary-card cash">
+      <div class="summary-icon">💵</div>
+      <div class="summary-info">
+        <span class="summary-label" data-i18n="accounts.cash">Cash</span>
+        <span class="summary-value" id="cash-balance">$0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="accounts-actions">
+    <button id="add-account-btn" class="btn primary">
+      <span data-i18n="accounts.add_account">+ Add Account</span>
+    </button>
+    <button id="transfer-btn" class="btn secondary">
+      <span data-i18n="accounts.transfer">↔️ Transfer</span>
+    </button>
+    <button id="recalculate-btn" class="btn-outline">
+      <span data-i18n="accounts.recalculate">🔄 Recalculate Balances</span>
+    </button>
+  </div>
+
+  <div class="accounts-tabs">
+    <button class="tab-btn active" data-tab="all" data-i18n="accounts.all">All</button>
+    <button class="tab-btn" data-tab="checking" data-i18n="accounts.checking">Checking</button>
+    <button class="tab-btn" data-tab="savings" data-i18n="accounts.savings">Savings</button>
+    <button class="tab-btn" data-tab="credit_card" data-i18n="accounts.credit_cards">Credit Cards</button>
+    <button class="tab-btn" data-tab="cash" data-i18n="accounts.cash_tab">Cash</button>
+    <button class="tab-btn" data-tab="archived" data-i18n="accounts.archived">Archived</button>
+  </div>
+
+  <div class="accounts-list" id="accounts-list">
+    <div class="loading-state">
+      <p data-i18n="accounts.loading">Loading accounts...</p>
+    </div>
+  </div>
+
+  <div class="empty-state" id="empty-state" style="display: none;">
+    <div class="empty-icon">🏦</div>
+    <h3 data-i18n="accounts.no_accounts">No Accounts Yet</h3>
+    <p data-i18n="accounts.no_accounts_desc">Add your first bank account or credit card to start tracking your finances across multiple accounts.</p>
+    <button id="add-first-account-btn" class="btn primary" data-i18n="accounts.add_first">+ Add Your First Account</button>
+  </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/pages/accounts.js') }}"></script>
+{% endblock %}

@@ -2,6 +2,7 @@ import { db } from "./firebase/firebase-config.js";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { COLLECTION } from "./firebase/firebase-dbs.js";
 import { logActivity } from "./services/activity-log.js";
+import { convertToBaseCurrency, validateAmount, getBaseCurrency } from "./services/currency-service.js";
 
 export const EXPENSE_CATEGORIES = [
   { id: "food", name: "Food & Dining", icon: "🍔" },
@@ -28,9 +29,32 @@ export const INCOME_CATEGORIES = [
 
 export async function addExpense(userId, transactionData) {
   try {
+    const originalAmount = Number(transactionData.amount || transactionData);
+    const currency = transactionData.currency || getBaseCurrency();
+    const baseCurrency = getBaseCurrency();
+    
+    let convertedAmount = originalAmount;
+    let exchangeRate = 1;
+    let rateDate = new Date().toISOString().split('T')[0];
+    
+    if (currency !== baseCurrency) {
+      try {
+        const conversion = await convertToBaseCurrency(originalAmount, currency);
+        convertedAmount = conversion.convertedAmount;
+        exchangeRate = conversion.exchangeRate;
+        rateDate = conversion.rateDate;
+      } catch (error) {
+        console.error("Currency conversion failed, using original amount:", error);
+      }
+    }
+    
     const data = {
       uid: userId,
-      amount: Number(transactionData.amount || transactionData),
+      amount: convertedAmount,
+      originalAmount: originalAmount,
+      currency: currency,
+      exchangeRate: exchangeRate,
+      rateDate: rateDate,
       category: transactionData.category,
       type: transactionData.type,
       date: transactionData.date || new Date().toISOString().split('T')[0],
@@ -48,14 +72,30 @@ export async function addExpense(userId, transactionData) {
     if (transactionData.description) {
       data.description = transactionData.description;
     }
-    if (transactionData.method) {
-      data.method = transactionData.method;
+    if (transactionData.paymentMethod) {
+      data.paymentMethod = transactionData.paymentMethod;
+    }
+    if (transactionData.accountId) {
+      data.accountId = transactionData.accountId;
     }
     
     const docRef = await addDoc(collection(db, COLLECTION.TRANSACTIONS), data);
     
+    if (data.accountId) {
+      try {
+        const { updateAccountBalance } = await import("./services/accounts-service.js");
+        if (data.type === 'income') {
+          await updateAccountBalance(data.accountId, convertedAmount, 'add');
+        } else if (data.type === 'expense') {
+          await updateAccountBalance(data.accountId, convertedAmount, 'subtract');
+        }
+      } catch (e) {
+        console.error("Error updating account balance:", e);
+      }
+    }
+    
     const actionName = data.type === 'income' ? 'added_income' : 'added_expense';
-    await logActivity(actionName, COLLECTION.TRANSACTIONS, docRef.id, null, {
+    await logActivity(actionName, "transaction_db", docRef.id, null, {
       ...data,
       id: docRef.id
     });
@@ -95,7 +135,7 @@ export async function updateExpense(expenseId, amount, category, type, descripti
     });
     
     const actionName = type === 'income' ? 'updated_income' : 'updated_expense';
-    await logActivity(actionName, COLLECTION.TRANSACTIONS, expenseId, beforeData, {
+    await logActivity(actionName, "transaction_db", expenseId, beforeData, {
       id: expenseId,
       amount: Number(amount),
       category,
@@ -124,8 +164,22 @@ export async function deleteExpense(expenseId, description) {
     
     await deleteDoc(expenseRef);
     
+    if (beforeData?.accountId) {
+      try {
+        const { updateAccountBalance } = await import("./services/accounts-service.js");
+        const amount = Number(beforeData.amount) || 0;
+        if (beforeData.type === 'income') {
+          await updateAccountBalance(beforeData.accountId, amount, 'subtract');
+        } else if (beforeData.type === 'expense') {
+          await updateAccountBalance(beforeData.accountId, amount, 'add');
+        }
+      } catch (e) {
+        console.error("Error reverting account balance:", e);
+      }
+    }
+    
     const actionName = beforeData?.type === 'income' ? 'deleted_income' : 'deleted_expense';
-    await logActivity(actionName, COLLECTION.TRANSACTIONS, expenseId, beforeData, null);
+    await logActivity(actionName, "transaction_db", expenseId, beforeData, null);
     
     return true;
   } catch (error) {
