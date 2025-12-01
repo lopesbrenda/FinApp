@@ -1,164 +1,89 @@
 {% extends "index.html" %}
 {% block content %}
-<div class="card">
-  <h1 data-i18n="dashboard.title">📊 Financial Dashboard</h1>
-  <p data-i18n="dashboard.subtitle">Overview of your finances</p>
-  <p style="margin-top: 10px; color: #666;">
-    <span data-i18n="dashboard.welcome">Welcome</span>, <strong id="user-name">User</strong>
-  </p>
-</div>
+<section class="page-container" aria-labelledby="dashboard-title">
+  <header class="card">
+    <h1 id="dashboard-title" data-i18n="dashboard.title">📊 Financial Dashboard</h1>
+    <p data-i18n="dashboard.subtitle">Overview of your finances</p>
+    <p>
+      <span data-i18n="dashboard.welcome">Welcome</span>, <strong id="user-name">User</strong>
+    </p>
+  </header>
 
-<div class="card-grid">
-  <div class="card">
-    <h3>🏦 Net Worth</h3>
-    <h2 id="account-balance-amount" style="color: var(--accent, #6c21e4); margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">All accounts</p>
-  </div>
-  
-  <div class="card">
-    <h3>💳 Bank Accounts</h3>
-    <h2 id="bank-balance-amount" style="color: #4caf50; margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">Checking & Savings</p>
-  </div>
-  
-  <div class="card">
-    <h3>💵 Cash</h3>
-    <h2 id="cash-balance-amount" style="color: #2196F3; margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">Cash on hand</p>
-  </div>
+  <div class="card-grid" role="region" aria-label="Resumo financeiro">
+    <article class="card">
+      <h3>🏦 Net Worth</h3>
+      <p class="kpi-amount kpi-amount--primary" id="account-balance-amount">€ 0.00</p>
+      <p class="kpi-description" data-i18n="dashboard.all_accounts">All accounts</p>
+    </article>
+    
+    <article class="card">
+      <h3 data-i18n="dashboard.bank_accounts">💳 Bank Accounts</h3>
+      <p class="kpi-amount kpi-amount--success" id="bank-balance-amount">€ 0.00</p>
+      <p class="kpi-description" data-i18n="dashboard.checking_savings">Checking & Savings</p>
+    </article>
+    
+    <article class="card">
+      <h3 data-i18n="dashboard.cash">💵 Cash</h3>
+      <p class="kpi-amount kpi-amount--info" id="cash-balance-amount">€ 0.00</p>
+      <p class="kpi-description" data-i18n="dashboard.cash_on_hand">Cash on hand</p>
+    </article>
 
-  <div class="card">
-    <h3>💳 Credit Card Debt</h3>
-    <h2 id="credit-debt-amount" style="color: #f44336; margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">Outstanding balance</p>
-  </div>
-</div>
-
-<div class="card-grid" style="margin-top: 20px;">
-  <div class="card">
-    <h3 data-i18n="dashboard.income">📈 Income</h3>
-    <h2 id="income-amount" style="color: #4caf50; margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">This period</p>
-  </div>
-  
-  <div class="card">
-    <h3 data-i18n="dashboard.expenses">📉 Expenses</h3>
-    <h2 id="expenses-amount" style="color: #f44336; margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">This period</p>
+    <article class="card">
+      <h3 data-i18n="dashboard.credit_debt">💳 Credit Card Debt</h3>
+      <p class="kpi-amount kpi-amount--danger" id="credit-debt-amount">€ 0.00</p>
+      <p class="kpi-description" data-i18n="dashboard.outstanding">Outstanding balance</p>
+    </article>
   </div>
 
-  <div class="card">
-    <h3 data-i18n="dashboard.goals">🎯 Goals</h3>
-    <h2 id="goals-amount" style="color: #2196F3; margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">Target amount</p>
-  </div>
-  
-  <div class="card">
-    <h3 data-i18n="dashboard.balance">💰 Cash Flow</h3>
-    <h2 id="balance-amount" style="color: var(--accent, #6c21e4); margin: 16px 0;">$0.00</h2>
-    <p style="font-size: 0.85rem; color: #888;">Income - Expenses</p>
-  </div>
-</div>
+  <div class="card-grid" role="region" aria-label="Financial metrics">
+    <article class="card">
+      <h3 data-i18n="dashboard.income">📈 Income</h3>
+      <p class="kpi-amount kpi-amount--success" id="income-amount">€ 0.00</p>
+      <p class="kpi-description" data-i18n="dashboard.this_month">This month</p>
+    </article>
+    
+    <article class="card">
+      <h3 data-i18n="dashboard.expenses">📉 Expenses</h3>
+      <p class="kpi-amount kpi-amount--danger" id="expenses-amount">€ 0.00</p>
+      <p class="kpi-description" data-i18n="dashboard.this_month">This month</p>
+    </article>
 
-<div class="card" style="max-width: 1200px; margin: 20px auto;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <h2 data-i18n="dashboard.transactions" style="margin: 0;">Recent Transactions</h2>
-      <select id="period-filter" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.9rem; cursor: pointer;">
-        <option value="current_month" data-i18n="filter.current_month">This Month</option>
-        <option value="last_month" data-i18n="filter.last_month">Last Month</option>
-        <option value="last_3_months" data-i18n="filter.last_3_months">Last 3 Months</option>
-        <option value="current_year" data-i18n="filter.current_year">This Year</option>
-        <option value="all" data-i18n="filter.all">All Time</option>
-      </select>
-      <button id="filters-btn" class="btn-small" style="background: #6c21e4; color: white; cursor: pointer; padding: 6px 12px;">
-        🔍 <span data-i18n="filter.filters">Filters</span>
-      </button>
-    </div>
-    <div style="display: flex; gap: 10px;">
-      <button id="add-income" class="btn" style="background: #4caf50;">
+    <article class="card card--clickable" onclick="window.location.href='/analytics#goals'" role="link" tabindex="0" aria-label="View financial goals">
+      <h3 data-i18n="dashboard.goals">🎯 Goals</h3>
+      <p class="kpi-amount kpi-amount--info" id="goals-summary">0 goals</p>
+      <p class="kpi-description" id="goals-progress">0% avg progress</p>
+    </article>
+    
+    <article class="card">
+      <h3 data-i18n="dashboard.balance">💰 Cash Flow</h3>
+      <p class="kpi-amount kpi-amount--primary" id="balance-amount">€ 0.00</p>
+      <p class="kpi-description" data-i18n="dashboard.income_minus_expenses">Income - Expenses</p>
+    </article>
+  </div>
+
+  <section class="card card--quick-actions" aria-labelledby="quick-actions-title">
+    <h3 id="quick-actions-title" data-i18n="dashboard.quick_actions">Quick Actions</h3>
+    <div class="quick-actions-wrapper">
+      <button id="add-income" class="btn btn--success" type="button">
         <span data-i18n="dashboard.addIncome">+ Income</span>
       </button>
-      <button id="add-expense" class="btn" style="background: #f44336;">
+      <button id="add-expense" class="btn btn--danger" type="button">
         <span data-i18n="dashboard.addExpense">+ Expense</span>
       </button>
-      <button id="add-goal" class="btn" style="background: #2196F3;">
+      <button id="add-goal" class="btn btn--info" type="button">
         <span data-i18n="dashboard.addGoal">+ Goal</span>
       </button>
-      <button id="contribute-goal" class="btn" style="background: #1976D2;">
+      <button id="contribute-goal" class="btn" type="button">
         <span data-i18n="dashboard.contributeGoal">💰 Contribute</span>
       </button>
     </div>
-  </div>
-  
-  <div id="expenses-list" style="text-align: left; margin-top: 20px;">
-    <p style="color: #999; text-align: center; padding: 40px;">
-      <span data-i18n="dashboard.noTransactions">No transactions yet. Click + Income or + Expense to start!</span>
-    </p>
-  </div>
-</div>
-
-<div class="card" style="max-width: 1200px; margin: 20px auto;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2 data-i18n="dashboard.myGoals">My Goals</h2>
-  </div>
-  
-  <div class="goals-tabs" style="border-bottom: 2px solid #eee; margin-bottom: 20px;">
-    <button class="goal-tab active" data-tab="active" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; color: #6c21e4; border-bottom: 3px solid #6c21e4; transition: all 0.2s;">
-      <span data-i18n="active_goals">Active Goals</span>
-    </button>
-    <button class="goal-tab" data-tab="completed" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; color: #999; border-bottom: 3px solid transparent; transition: all 0.2s;">
-      <span data-i18n="completed_goals">Completed Goals</span>
-    </button>
-    <button class="goal-tab" data-tab="archived" style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; color: #999; border-bottom: 3px solid transparent; transition: all 0.2s;">
-      <span data-i18n="archived_goals">Archived Goals</span>
-    </button>
-  </div>
-  
-  <div id="active-goals-container" class="goals-tab-content" style="display: block;">
-    <div id="goals-list" style="margin-top: 20px;">
-      <p style="color: #999; text-align: center; padding: 40px;">
-        <span data-i18n="dashboard.noGoals">No goals yet. Click + Goal to create one!</span>
-      </p>
+    <div class="text-center">
+      <a href="/analytics" class="view-details-link">
+        <span data-i18n="dashboard.view_details">📊 View Detailed Analytics</span>
+      </a>
     </div>
-  </div>
-  
-  <div id="completed-goals-container" class="goals-tab-content" style="display: none;">
-    <div id="completed-goals-list" style="margin-top: 20px;">
-      <p style="color: #999; text-align: center; padding: 40px;">
-        <span data-i18n="no_completed_goals">No completed goals yet. Complete your first goal to see it here!</span>
-      </p>
-    </div>
-  </div>
-  
-  <div id="archived-goals-container" class="goals-tab-content" style="display: none;">
-    <div id="archived-goals-list" style="margin-top: 20px;">
-      <p style="color: #999; text-align: center; padding: 40px;">
-        <span data-i18n="no_archived_goals">No archived goals yet. Archive a completed goal to see it here!</span>
-      </p>
-    </div>
-  </div>
-</div>
-
-<style>
-.goal-tab:hover {
-  color: #6c21e4;
-}
-
-.goal-tab.active {
-  color: #6c21e4;
-  border-bottom-color: #6c21e4;
-}
-
-.goals-tab-content {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-</style>
+  </section>
+</section>
 
 <script type="module" src="/static/js/pages/dashboard.js"></script>
 {% endblock %}

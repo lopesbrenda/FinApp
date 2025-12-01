@@ -1,79 +1,150 @@
 {% extends "index.html" %}
 {% block content %}
 <div class="analytics-page">
-  <div class="page-header">
+  <header class="page-header">
     <h1 data-i18n="analytics.title">📊 Financial Analytics</h1>
-    <p data-i18n="analytics.subtitle">Visualize your spending patterns and trends</p>
-  </div>
+    <p data-i18n="analytics.subtitle">Detailed view of your finances, transactions and goals</p>
+  </header>
 
   <div class="analytics-controls">
     <div class="period-selector">
       <label for="analytics-period" data-i18n="analytics.period">Period:</label>
-      <select id="analytics-period">
-        <option value="current_month" data-i18n="filter.current_month">This Month</option>
+      <select id="analytics-period" aria-label="Select period">
+        <option value="current_month" selected data-i18n="filter.current_month">This Month</option>
         <option value="last_month" data-i18n="filter.last_month">Last Month</option>
         <option value="last_3_months" data-i18n="filter.last_3_months">Last 3 Months</option>
-        <option value="current_year" selected data-i18n="filter.current_year">This Year</option>
+        <option value="current_year" data-i18n="filter.current_year">This Year</option>
         <option value="all" data-i18n="filter.all">All Time</option>
       </select>
+    </div>
+    <div class="action-buttons" role="group" aria-label="Quick actions">
+      <button id="add-income" class="btn btn-success" type="button">
+        <span data-i18n="dashboard.addIncome">+ Income</span>
+      </button>
+      <button id="add-expense" class="btn btn-danger" type="button">
+        <span data-i18n="dashboard.addExpense">+ Expense</span>
+      </button>
+      <button id="add-goal" class="btn btn-primary" type="button">
+        <span data-i18n="dashboard.addGoal">+ Goal</span>
+      </button>
+      <button id="contribute-goal" class="btn btn-info" type="button">
+        <span data-i18n="dashboard.contributeGoal">💰 Contribute</span>
+      </button>
     </div>
   </div>
 
   <div class="analytics-grid">
-    <div class="analytics-card summary-card">
+    <article class="analytics-card summary-card">
       <h3 data-i18n="analytics.summary">Summary</h3>
       <div class="summary-stats">
         <div class="stat-item income">
           <span class="stat-label" data-i18n="dashboard.income">Income</span>
-          <span class="stat-value" id="total-income">$0.00</span>
+          <span class="stat-value" id="total-income">€ 0.00</span>
         </div>
         <div class="stat-item expenses">
           <span class="stat-label" data-i18n="dashboard.expenses">Expenses</span>
-          <span class="stat-value" id="total-expenses">$0.00</span>
+          <span class="stat-value" id="total-expenses">€ 0.00</span>
         </div>
         <div class="stat-item balance">
           <span class="stat-label" data-i18n="analytics.net_balance">Net Balance</span>
-          <span class="stat-value" id="net-balance">$0.00</span>
+          <span class="stat-value" id="net-balance">€ 0.00</span>
         </div>
       </div>
-    </div>
+    </article>
 
-    <div class="analytics-card chart-card">
+    <article class="analytics-card chart-card">
       <h3 data-i18n="analytics.monthly_overview">Monthly Overview</h3>
       <div class="chart-container">
-        <canvas id="monthly-chart"></canvas>
+        <canvas id="monthly-chart" aria-label="Monthly overview chart"></canvas>
       </div>
-    </div>
+    </article>
 
-    <div class="analytics-card chart-card">
+    <article class="analytics-card chart-card">
       <h3 data-i18n="analytics.category_breakdown">Spending by Category</h3>
       <div class="chart-container pie-container">
-        <canvas id="category-chart"></canvas>
+        <canvas id="category-chart" aria-label="Spending by category chart"></canvas>
       </div>
-      <div id="category-legend" class="category-legend"></div>
-    </div>
+      <div id="category-legend" class="category-legend" role="list" aria-label="Category legend"></div>
+    </article>
 
-    <div class="analytics-card chart-card full-width">
+    <article class="analytics-card chart-card full-width">
       <h3 data-i18n="analytics.spending_trend">Spending Trend</h3>
       <div class="chart-container trend-container">
-        <canvas id="trend-chart"></canvas>
+        <canvas id="trend-chart" aria-label="Spending trend chart"></canvas>
       </div>
-    </div>
+    </article>
 
-    <div class="analytics-card top-categories">
+    <article class="analytics-card top-categories">
       <h3 data-i18n="analytics.top_expenses">Top Expense Categories</h3>
       <div id="top-categories-list" class="top-list">
         <p class="no-data" data-i18n="analytics.no_data">No data available</p>
       </div>
-    </div>
+    </article>
 
-    <div class="analytics-card recent-large">
+    <article class="analytics-card recent-large">
       <h3 data-i18n="analytics.largest_expenses">Largest Expenses</h3>
       <div id="largest-expenses-list" class="top-list">
         <p class="no-data" data-i18n="analytics.no_data">No data available</p>
       </div>
-    </div>
+    </article>
   </div>
+
+  <section class="transactions-section full-width" aria-labelledby="transactions-title">
+    <div class="section-header">
+      <h3 id="transactions-title" data-i18n="dashboard.transactions">Recent Transactions</h3>
+      <button id="filters-btn" class="btn btn--small" type="button">
+        🔍 <span data-i18n="filter.filters">Filters</span>
+      </button>
+    </div>
+    
+    <div id="expenses-list" class="text-left">
+      <p class="no-data">
+        <span data-i18n="dashboard.noTransactions">No transactions yet. Click + Income or + Expense to start!</span>
+      </p>
+    </div>
+  </section>
+
+  <section id="goals" class="goals-section full-width" aria-labelledby="goals-title">
+    <div class="section-header">
+      <h3 id="goals-title" data-i18n="dashboard.myGoals">My Goals</h3>
+    </div>
+    
+    <div class="goals-tabs" role="tablist" aria-label="Filtro de metas">
+      <button class="goal-tab active" data-tab="active" role="tab" aria-selected="true" aria-controls="active-goals-container" type="button">
+        <span data-i18n="active_goals">Active Goals</span>
+      </button>
+      <button class="goal-tab" data-tab="completed" role="tab" aria-selected="false" aria-controls="completed-goals-container" type="button">
+        <span data-i18n="completed_goals">Completed Goals</span>
+      </button>
+      <button class="goal-tab" data-tab="archived" role="tab" aria-selected="false" aria-controls="archived-goals-container" type="button">
+        <span data-i18n="archived_goals">Archived Goals</span>
+      </button>
+    </div>
+    
+    <div id="active-goals-container" class="goals-tab-content" role="tabpanel" aria-labelledby="active-goals-tab">
+      <div id="active-goals-list">
+        <p class="no-data">
+          <span data-i18n="dashboard.noGoals">No goals yet. Click + Goal to create one!</span>
+        </p>
+      </div>
+    </div>
+    
+    <div id="completed-goals-container" class="goals-tab-content hidden" role="tabpanel" aria-labelledby="completed-goals-tab">
+      <div id="completed-goals-list">
+        <p class="no-data">
+          <span data-i18n="no_completed_goals">No completed goals yet. Complete your first goal to see it here!</span>
+        </p>
+      </div>
+    </div>
+    
+    <div id="archived-goals-container" class="goals-tab-content hidden" role="tabpanel" aria-labelledby="archived-goals-tab">
+      <div id="archived-goals-list">
+        <p class="no-data">
+          <span data-i18n="no_archived_goals">No archived goals yet. Archive a completed goal to see it here!</span>
+        </p>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script type="module" src="{{ url_for('static', filename='js/pages/analytics.js') }}"></script>

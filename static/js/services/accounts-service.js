@@ -289,6 +289,24 @@ export async function getUserAccounts(userId, includeArchived = false) {
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
+    if (error.code === 'failed-precondition') {
+      console.warn("⚠️ Firebase index missing. Using fallback query. Consider creating composite index: uid (asc), isActive (asc), createdAt (desc)");
+      const fallbackQ = query(
+        collection(db, COLLECTION.ACCOUNTS),
+        where('uid', '==', userId)
+      );
+      const snapshot = await getDocs(fallbackQ);
+      let accounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (!includeArchived) {
+        accounts = accounts.filter(a => a.isActive !== false);
+      }
+      accounts.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        return dateB - dateA;
+      });
+      return accounts;
+    }
     console.error("Error getting accounts:", error);
     throw error;
   }
@@ -327,10 +345,36 @@ export function subscribeToAccounts(userId, callback, includeArchived = false) {
     );
   }
   
+  const processAccounts = (snapshot) => {
+    let accounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (!includeArchived) {
+      accounts = accounts.filter(a => a.isActive !== false);
+    }
+    accounts.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+      return dateB - dateA;
+    });
+    return accounts;
+  };
+  
   return onSnapshot(q, (snapshot) => {
-    const accounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const accounts = processAccounts(snapshot);
     callback(accounts);
   }, (error) => {
+    if (error.code === 'failed-precondition') {
+      console.warn("⚠️ Firebase index missing. Using fallback subscription. Consider creating composite index: uid (asc), isActive (asc), createdAt (desc)");
+      const fallbackQ = query(
+        collection(db, COLLECTION.ACCOUNTS),
+        where('uid', '==', userId)
+      );
+      return onSnapshot(fallbackQ, (snapshot) => {
+        const accounts = processAccounts(snapshot);
+        callback(accounts);
+      }, (err) => {
+        console.error("Error in fallback accounts subscription:", err);
+      });
+    }
     console.error("Error in accounts subscription:", error);
   });
 }

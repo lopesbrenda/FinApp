@@ -1,82 +1,82 @@
 {% extends "index.html" %}
 {% block content %}
-<div class="home-hero">
+<section class="home-hero" aria-labelledby="hero-welcome">
   <div class="hero-content">
     <h1 class="hero-title" id="hero-welcome" data-i18n="home.title">Welcome to FinLife 💜</h1>
     <p class="hero-subtitle" data-i18n="home.subtitle">Manage your personal finances smartly and efficiently.</p>
   </div>
-</div>
+</section>
 
-<div class="home-section">
-  <h2 class="section-title" data-i18n="home.quick_access">🔥 Quick Access</h2>
+<section class="home-section" aria-labelledby="quick-access-title">
+  <h2 class="section-title" id="quick-access-title" data-i18n="home.quick_access">🔥 Quick Access</h2>
   
   <div class="quick-access-grid">
-    <a href="/dashboard" class="quick-card quick-card-dashboard">
-      <div class="quick-card-icon">📊</div>
-      <div class="quick-card-content">
+    <a href="/dashboard" class="quick-card" aria-label="Go to Dashboard">
+      <div class="quick-card__icon" aria-hidden="true">📊</div>
+      <div class="quick-card__content">
         <h3 data-i18n="nav.dashboard">Dashboard</h3>
         <p data-i18n="home.dashboard.desc">Real-time overview of your finances</p>
-        <span class="quick-card-hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
+        <span class="quick-card__hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
       </div>
     </a>
     
-    <a href="/analytics" class="quick-card quick-card-analytics">
-      <div class="quick-card-icon">📈</div>
-      <div class="quick-card-content">
+    <a href="/analytics" class="quick-card" aria-label="Go to Analytics">
+      <div class="quick-card__icon" aria-hidden="true">📈</div>
+      <div class="quick-card__content">
         <h3 data-i18n="nav.analytics">Analytics</h3>
         <p data-i18n="home.analytics.desc">Visualize your spending patterns</p>
-        <span class="quick-card-hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
+        <span class="quick-card__hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
       </div>
     </a>
     
-    <a href="/profile" class="quick-card quick-card-profile">
-      <div class="quick-card-icon">👤</div>
-      <div class="quick-card-content">
+    <a href="/profile" class="quick-card" aria-label="Go to Profile">
+      <div class="quick-card__icon" aria-hidden="true">👤</div>
+      <div class="quick-card__content">
         <h3 data-i18n="nav.profile">Profile</h3>
         <p data-i18n="home.profile.desc">Your profile and settings</p>
-        <span class="quick-card-hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
+        <span class="quick-card__hint" data-i18n="home.tap_enter">👉 Tap anywhere to enter</span>
       </div>
     </a>
   </div>
-</div>
+</section>
 
-<div class="home-section features-section">
-  <h2 class="section-title" data-i18n="home.features.title">✨ Main Features</h2>
+<section class="home-section features-section" aria-labelledby="features-title">
+  <h2 class="section-title" id="features-title" data-i18n="home.features.title">✨ Main Features</h2>
   
   <div class="features-grid">
     <div class="feature-item">
-      <span class="feature-icon">💰</span>
-      <span class="feature-text" data-i18n="home.features.1">Track income & expenses</span>
+      <span class="feature-item__icon" aria-hidden="true">💰</span>
+      <span class="feature-item__text" data-i18n="home.features.1">Track income & expenses</span>
     </div>
     <div class="feature-item">
-      <span class="feature-icon">📈</span>
-      <span class="feature-text" data-i18n="home.features.2">Charts & monthly summaries</span>
+      <span class="feature-item__icon" aria-hidden="true">📈</span>
+      <span class="feature-item__text" data-i18n="home.features.2">Charts & monthly summaries</span>
     </div>
     <div class="feature-item">
-      <span class="feature-icon">🎯</span>
-      <span class="feature-text" data-i18n="home.features.3">Create and monitor financial goals</span>
+      <span class="feature-item__icon" aria-hidden="true">🎯</span>
+      <span class="feature-item__text" data-i18n="home.features.3">Create and monitor financial goals</span>
     </div>
     <div class="feature-item">
-      <span class="feature-icon">🔔</span>
-      <span class="feature-text" data-i18n="home.features.4">Custom alert notifications</span>
+      <span class="feature-item__icon" aria-hidden="true">🔔</span>
+      <span class="feature-item__text" data-i18n="home.features.4">Custom alert notifications</span>
     </div>
     <div class="feature-item">
-      <span class="feature-icon">💱</span>
-      <span class="feature-text" data-i18n="home.features.5">Multi-currency support</span>
+      <span class="feature-item__icon" aria-hidden="true">💱</span>
+      <span class="feature-item__text" data-i18n="home.features.5">Multi-currency support</span>
     </div>
     <div class="feature-item">
-      <span class="feature-icon">🔄</span>
-      <span class="feature-text" data-i18n="home.features.6">Recurring transactions</span>
+      <span class="feature-item__icon" aria-hidden="true">🔄</span>
+      <span class="feature-item__text" data-i18n="home.features.6">Recurring transactions</span>
     </div>
   </div>
-</div>
+</section>
 
-<div class="home-section cta-section" id="cta-section">
-  <h2 class="cta-title" data-i18n="home.cta.title">Ready to take control?</h2>
+<section class="home-section cta-section" id="cta-section" aria-labelledby="cta-title">
+  <h2 class="cta-title" id="cta-title" data-i18n="home.cta.title">Ready to take control?</h2>
   <p class="cta-subtitle" data-i18n="home.cta.subtitle">Start managing your finances today!</p>
   <div class="cta-buttons">
-    <a href="/signup" class="btn btn-primary btn-large" data-i18n="nav.signup">Sign Up</a>
-    <a href="/login" class="btn btn-secondary btn-large" data-i18n="nav.login">Login</a>
+    <a href="/signup" class="btn btn--primary btn--large" data-i18n="nav.signup">Sign Up</a>
+    <a href="/login" class="btn btn--secondary btn--large" data-i18n="nav.login">Login</a>
   </div>
-</div>
+</section>
 {% endblock %}

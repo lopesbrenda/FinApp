@@ -11,36 +11,71 @@
  * @param {number} monthlyContribution - Planned monthly contribution
  * @returns {Object} Projection details (remaining, months, years, expectedDate)
  */
-export function calculateProjection(targetAmount, currentAmount, monthlyContribution) {
+export function calculateProjection(targetAmount, currentAmount, monthlyContribution, dueDate) {
   const remaining = Math.max(0, targetAmount - currentAmount);
   
-  if (monthlyContribution <= 0 || remaining <= 0) {
+  // Meta já atingida
+  if (remaining <= 0) {
+    return {
+      remaining: 0,
+      monthsNeeded: 0,
+      years: 0,
+      months: 0,
+      expectedDate: new Date(),
+      isComplete: true
+    };
+  }
+  
+  // Se tiver contribuição, projeta com base no valor e na contribuição
+  if (monthlyContribution > 0) {
+    const monthsNeeded = Math.ceil(remaining / monthlyContribution);
+    const years = Math.floor(monthsNeeded / 12);
+    const months = monthsNeeded % 12;
+    
+    const expectedDate = new Date();
+    expectedDate.setMonth(expectedDate.getMonth() + monthsNeeded);
+    
+    return {
+      remaining,
+      monthsNeeded,
+      years,
+      months,
+      expectedDate,
+      isComplete: false
+    };
+  }
+  
+  // Sem contribuição: calcula tempo restante até o dueDate
+  if (!dueDate) {
     return {
       remaining,
       monthsNeeded: 0,
       years: 0,
       months: 0,
       expectedDate: null,
-      isComplete: remaining <= 0
+      isComplete: false
     };
   }
+
+  const now = new Date();
+  const endDate = new Date(dueDate);
   
-  const monthsNeeded = Math.ceil(remaining / monthlyContribution);
-  const years = Math.floor(monthsNeeded / 12);
-  const months = monthsNeeded % 12;
+  let monthsRemaining = (endDate.getFullYear() - now.getFullYear()) * 12 + (endDate.getMonth() - now.getMonth());
+  monthsRemaining = Math.max(0, monthsRemaining);
   
-  const expectedDate = new Date();
-  expectedDate.setMonth(expectedDate.getMonth() + monthsNeeded);
+  const years = Math.floor(monthsRemaining / 12);
+  const months = monthsRemaining % 12;
   
   return {
     remaining,
-    monthsNeeded,
+    monthsNeeded: monthsRemaining,
     years,
     months,
-    expectedDate,
+    expectedDate: endDate,
     isComplete: false
   };
 }
+
 
 /**
  * Calculate projection status (ahead/behind/on-track)
@@ -128,12 +163,41 @@ export function formatProjectionTime(years, months, translations) {
 export function formatExpectedDate(date, locale = 'en-US') {
   if (!date) return '';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  let dateObj;
   
-  return dateObj.toLocaleDateString(locale, { 
-    year: 'numeric', 
-    month: 'long'
-  });
+  // Handle Firestore timestamp
+  if (date.toDate && typeof date.toDate === 'function') {
+    dateObj = date.toDate();
+  }
+  // Handle milliseconds timestamp
+  else if (typeof date === 'number') {
+    dateObj = new Date(date);
+  }
+  // Handle ISO string or other date string
+  else if (typeof date === 'string') {
+    dateObj = new Date(date);
+  }
+  // Already a Date object
+  else if (date instanceof Date) {
+    dateObj = date;
+  } else {
+    return '';
+  }
+  
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    return '';
+  }
+  
+  try {
+    return dateObj.toLocaleDateString(locale, { 
+      year: 'numeric', 
+      month: 'long'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
+  }
 }
 
 /**

@@ -3,17 +3,16 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style/profile.css') }}">
 
 <div class="profile-page">
-  <aside class="sidebar">
+  <aside class="sidebar" role="complementary" aria-label="Profile menu">
     <div class="sidebar-top">
       <img
         id="sidebar-avatar"
         class="sidebar-avatar"
         src="{{ url_for('static', filename='images/avatar-default.png') }}"
-        alt="avatar"
-        style="cursor: pointer;"
-      />
+        alt="User profile picture"
+      >
       
-      <input type="file" id="avatar-input" accept="image/*" style="display:none">
+      <input type="file" id="avatar-input" accept="image/*" class="hidden" aria-label="Upload profile picture">
       
       <div class="sidebar-user">
         <div id="sidebar-name"><span id="profile-name">...</span></div>
@@ -22,16 +21,16 @@
     </div>
 
     <nav class="sidebar-nav" role="navigation" aria-label="Profile navigation">
-      <button class="sidebar-link active" data-target="profile-panel" data-i18n="sidebar.profile">
+      <button class="sidebar-link active" data-target="profile-panel" data-i18n="sidebar.profile" type="button">
         Profile
       </button>
-      <button class="sidebar-link" data-target="settings-panel" data-i18n="sidebar.settings">
+      <button class="sidebar-link" data-target="settings-panel" data-i18n="sidebar.settings" type="button">
         Settings
       </button>
-      <button class="sidebar-link" data-target="password-panel" data-i18n="sidebar.password">
+      <button class="sidebar-link" data-target="password-panel" data-i18n="sidebar.password" type="button">
         Password
       </button>
-      <button class="sidebar-link" data-target="activity-panel" data-i18n="sidebar.activity">
+      <button class="sidebar-link" data-target="activity-panel" data-i18n="sidebar.activity" type="button">
         Activity Log
       </button>
     </nav>
@@ -41,22 +40,21 @@
     
     <header class="main-header">
       <h1 id="page-title" data-i18n="profile.title">👤 Profile Details</h1>
-      <div id="mini-loader" class="mini-loader" aria-hidden="true"></div>
+      <div id="mini-loader" class="mini-loader hidden" aria-hidden="true"></div>
     </header>
     
-    <section id="profile-panel" class="panel active">
-      
+    <section id="profile-panel" class="panel active" role="tabpanel" aria-labelledby="profile-tab">
       <div class="card">
         <h3 data-i18n="profile.edit">✏️ Edit Information</h3>
-        <form id="profile-form">
+        <form id="profile-form" class="form" novalidate>
           <label class="form-label" for="edit-name" data-i18n="profile.fullname">Full name</label>
-          <input id="edit-name" type="text" />
+          <input id="edit-name" type="text" autocomplete="name">
 
           <label class="form-label" for="edit-phone" data-i18n="profile.phone">Phone</label>
-          <input id="edit-phone" type="text" />
+          <input id="edit-phone" type="tel" autocomplete="tel" aria-label="Phone number">
 
           <label class="form-label" for="edit-email" data-i18n="profile.email">Email</label>
-          <input id="edit-email" type="email" />
+          <input id="edit-email" type="email" autocomplete="email" aria-label="Email address">
 
           <div class="form-actions">
             <button type="submit" class="btn" data-i18n="profile.save">Save</button>
@@ -65,12 +63,12 @@
       </div>
     </section>
 
-    <section id="settings-panel" class="panel">
-      <div class="card page settings">
+    <section id="settings-panel" class="panel" role="tabpanel" aria-labelledby="settings-tab">
+      <div class="card">
         <h2 data-i18n="settings.title">⚙️ Settings</h2>
-        <form id="settings-form">
+        <form id="settings-form" class="form" novalidate>
           
-          <h3 style="margin: 24px 0 16px; font-size: 18px; color: var(--text-color);" data-i18n="settings.general">💼 General</h3>
+          <h3 class="settings-heading" data-i18n="settings.general">💼 General</h3>
           
           <label class="form-label" data-i18n="settings.currency">Default Currency</label>
           <div class="custom-select" id="currency-select-box">
@@ -81,119 +79,160 @@
               role="combobox"
               aria-haspopup="listbox"
               aria-expanded="false"
+              aria-label="Select default currency"
             >
               <span id="currency-selected">EUR (€)</span>
-              <i class="arrow">▼</i>
+              <i class="arrow" aria-hidden="true">▼</i>
             </div>
             <div
               class="custom-options"
               role="listbox"
               aria-labelledby="currency-select-trigger"
             >
-              <div class="custom-option" data-value="EUR">EUR (€)</div>
-              <div class="custom-option" data-value="USD">USD ($)</div>
-              <div class="custom-option" data-value="BRL">BRL (R$)</div>
-              <div class="custom-option" data-value="GBP">GBP (£)</div>
+              <div class="custom-option" data-value="EUR" role="option">EUR (€)</div>
+              <div class="custom-option" data-value="USD" role="option">USD ($)</div>
+              <div class="custom-option" data-value="BRL" role="option">BRL (R$)</div>
+              <div class="custom-option" data-value="GBP" role="option">GBP (£)</div>
             </div>
           </div>
-          <input type="hidden" id="currency-select" name="defaultCurrency" />
+          <input type="hidden" id="currency-select" name="defaultCurrency">
           
-          <label class="form-label" for="language-select" data-i18n="settings.language">Language</label>
-          <select id="language-select" name="language" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--border-color, #e0e0e0);">
-            <option value="en">🇺🇸 English</option>
-            <option value="pt">🇧🇷 Português</option>
-          </select>
+          <label class="form-label" data-i18n="settings.language">Language</label>
+          <div class="custom-select" id="language-select-box">
+            <div
+              class="language-select-trigger"
+              id="language-select-trigger"
+              tabindex="0"
+              role="combobox"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-label="Select language"
+            >
+              <span id="language-selected">🇺🇸 English</span>
+              <i class="arrow" aria-hidden="true">▼</i>
+            </div>
+            <div
+              class="custom-options"
+              role="listbox"
+              aria-labelledby="language-select-trigger"
+            >
+              <div class="custom-option" data-value="en" role="option">🇺🇸 English</div>
+              <div class="custom-option" data-value="pt" role="option">🇧🇷 Portuguese</div>
+            </div>
+          </div>
+          <input type="hidden" id="language-select" name="language">
           
-          <h3 style="margin: 32px 0 16px; font-size: 18px; color: var(--text-color);" data-i18n="settings.notifications">🔔 Notifications</h3>
+          <h3 class="settings-heading" data-i18n="settings.notifications">🔔 Notifications</h3>
           
-          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+          <label class="form-label" for="alert-expenses">
             <span data-i18n="settings.alerts.expenses">Expense Alerts</span>
-            <input type="checkbox" id="alert-expenses" name="alertExpenses" class="switch" />
+            <input type="checkbox" id="alert-expenses" name="alertExpenses" class="switch">
           </label>
 
-          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+          <label class="form-label" for="alert-goals">
             <span data-i18n="settings.alerts.goals">Goal Alerts</span>
-            <input type="checkbox" id="alert-goals" name="alertGoals" class="switch" />
+            <input type="checkbox" id="alert-goals" name="alertGoals" class="switch">
           </label>
           
-          <h3 style="margin: 32px 0 16px; font-size: 18px; color: var(--text-color);" data-i18n="settings.privacy">🔒 Privacy</h3>
+          <h3 class="settings-heading" data-i18n="settings.privacy">🔒 Privacy</h3>
           
-          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+          <label class="form-label">
             <span data-i18n="settings.twofa">Two-Factor Authentication</span>
-            <input type="checkbox" id="two-factor" name="twoFactor" class="switch" disabled />
+            <input type="checkbox" id="two-factor" name="twoFactor" class="switch" disabled aria-disabled="true">
           </label>
-          <small style="color: var(--text-secondary, #999); font-size: 13px; display: block; margin-top: -8px;" data-i18n="settings.twofa.soon">(Coming soon)</small>
+          <small class="text-muted" data-i18n="settings.twofa.soon">(Coming soon)</small>
           
-          <div class="form-actions" style="margin-top: 32px;">
+          <div class="form-actions">
             <button type="submit" class="btn" data-i18n="settings.save">Save Settings</button>
           </div>
         </form>
       </div>
     </section>
 
-    <section id="password-panel" class="panel">
+    <section id="password-panel" class="panel" role="tabpanel" aria-labelledby="password-tab">
       <div class="card">
-      <h2 data-i18n="password.title">🔒 Change Password</h2>
-      <form id="password-form">
-      <label class="form-label" for="edit-pass" data-i18n="password.new">New password</label>
-      <div class="password-field">
-      <input id="edit-pass" type="password" autocomplete="new-password" />
-      <button type="button" class="eye-btn toggle-pass" data-target="edit-pass" aria-label="Toggle password">🙉</button>
-      </div>
+        <h2 data-i18n="password.title">🔒 Change Password</h2>
+        <form id="password-form" class="form" novalidate>
+          <label class="form-label" for="edit-pass" data-i18n="password.new">New password</label>
+          <div class="password-field">
+            <input id="edit-pass" type="password" autocomplete="new-password" aria-label="New password">
+            <button type="button" class="eye-btn toggle-pass" data-target="edit-pass" aria-label="Show/hide password">🙉</button>
+          </div>
 
-      <label class="form-label" for="edit-pass-confirm" data-i18n="password.confirm">Confirm new password</label>
-      <div class="password-field">
-      <input id="edit-pass-confirm" type="password" autocomplete="new-password" />
-      <button type="button" class="eye-btn toggle-pass" data-target="edit-pass-confirm" aria-label="Toggle password confirm">🙉</button>
-      </div>
+          <label class="form-label" for="edit-pass-confirm" data-i18n="password.confirm">Confirm new password</label>
+          <div class="password-field">
+            <input id="edit-pass-confirm" type="password" autocomplete="new-password" aria-label="Confirm password">
+            <button type="button" class="eye-btn toggle-pass" data-target="edit-pass-confirm" aria-label="Show/hide password confirmation">🙉</button>
+          </div>
 
-      <div class="form-actions">
-      <button type="submit" class="btn" data-i18n="password.change">Change Password</button>
-      </div>
-      </form>
+          <div class="form-actions">
+            <button type="submit" class="btn" data-i18n="password.change">Change Password</button>
+          </div>
+        </form>
       </div>
     </section>
 
-    <section id="activity-panel" class="panel">
+    <section id="activity-panel" class="panel" role="tabpanel" aria-labelledby="activity-tab">
       <div class="card activity-log-card">
         <div class="activity-header">
           <h2 data-i18n="activity.title">📄 Activity Log</h2>
           <p class="activity-subtitle" data-i18n="activity.subtitle">Tracking your actions for transparency and security.</p>
         </div>
 
-        <div class="activity-filters">
+        <div class="activity-filters" role="search" aria-label="Activity log filters">
           <div class="filter-group">
             <label data-i18n="activity.filter.period">Period</label>
-            <select id="activity-period-filter">
-              <option value="today" data-i18n="activity.filter.today">Today</option>
-              <option value="7days" selected data-i18n="activity.filter.7days">Last 7 days</option>
-              <option value="30days" data-i18n="activity.filter.30days">Last 30 days</option>
-              <option value="all" data-i18n="activity.filter.all">All time</option>
-            </select>
+            <div class="custom-select" id="activity-period-select-box">
+              <div class="activity-select-trigger" id="activity-period-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-label="Select period">
+                <span id="activity-period-selected">Last 7 days</span>
+                <i class="arrow" aria-hidden="true">▼</i>
+              </div>
+              <div class="custom-options" role="listbox" aria-labelledby="activity-period-trigger">
+                <div class="custom-option" data-value="today" role="option" data-i18n="activity.filter.today">Today</div>
+                <div class="custom-option selected" data-value="7days" role="option" data-i18n="activity.filter.7days">Last 7 days</div>
+                <div class="custom-option" data-value="30days" role="option" data-i18n="activity.filter.30days">Last 30 days</div>
+                <div class="custom-option" data-value="all" role="option" data-i18n="activity.filter.all">All time</div>
+              </div>
+            </div>
+            <input type="hidden" id="activity-period-filter" name="period" value="7days">
           </div>
           <div class="filter-group">
             <label data-i18n="activity.filter.action">Action type</label>
-            <select id="activity-action-filter">
-              <option value="all" data-i18n="activity.filter.all_actions">All actions</option>
-              <option value="transaction" data-i18n="activity.filter.transactions">Transactions</option>
-              <option value="goal" data-i18n="activity.filter.goals">Goals</option>
-              <option value="settings" data-i18n="activity.filter.settings">Settings</option>
-              <option value="login" data-i18n="activity.filter.login">Login/Logout</option>
-            </select>
+            <div class="custom-select" id="activity-action-select-box">
+              <div class="activity-select-trigger" id="activity-action-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-label="Select action type">
+                <span id="activity-action-selected">All actions</span>
+                <i class="arrow" aria-hidden="true">▼</i>
+              </div>
+              <div class="custom-options" role="listbox" aria-labelledby="activity-action-trigger">
+                <div class="custom-option selected" data-value="all" role="option" data-i18n="activity.filter.all_actions">All actions</div>
+                <div class="custom-option" data-value="transaction" role="option" data-i18n="activity.filter.transactions">Transactions</div>
+                <div class="custom-option" data-value="goal" role="option" data-i18n="activity.filter.goals">Goals</div>
+                <div class="custom-option" data-value="settings" role="option" data-i18n="activity.filter.settings">Settings</div>
+                <div class="custom-option" data-value="login" role="option" data-i18n="activity.filter.login">Login/Logout</div>
+              </div>
+            </div>
+            <input type="hidden" id="activity-action-filter" name="actionType" value="all">
           </div>
           <div class="filter-group">
             <label data-i18n="activity.filter.entity">Entity</label>
-            <select id="activity-entity-filter">
-              <option value="all" data-i18n="activity.filter.all_entities">All entities</option>
-              <option value="transaction" data-i18n="activity.filter.transaction">Transaction</option>
-              <option value="goal" data-i18n="activity.filter.goal">Goal</option>
-              <option value="settings" data-i18n="activity.filter.settings_entity">Settings</option>
-              <option value="profile" data-i18n="activity.filter.profile">Profile</option>
-            </select>
+            <div class="custom-select" id="activity-entity-select-box">
+              <div class="activity-select-trigger" id="activity-entity-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-label="Select entity">
+                <span id="activity-entity-selected">All entities</span>
+                <i class="arrow" aria-hidden="true">▼</i>
+              </div>
+              <div class="custom-options" role="listbox" aria-labelledby="activity-entity-trigger">
+                <div class="custom-option selected" data-value="all" role="option" data-i18n="activity.filter.all_entities">All entities</div>
+                <div class="custom-option" data-value="transaction" role="option" data-i18n="activity.filter.transaction">Transaction</div>
+                <div class="custom-option" data-value="goal" role="option" data-i18n="activity.filter.goal">Goal</div>
+                <div class="custom-option" data-value="settings" role="option" data-i18n="activity.filter.settings_entity">Settings</div>
+                <div class="custom-option" data-value="profile" role="option" data-i18n="activity.filter.profile">Profile</div>
+              </div>
+            </div>
+            <input type="hidden" id="activity-entity-filter" name="entity" value="all">
           </div>
         </div>
 
-        <div id="activity-list" class="activity-list">
+        <div id="activity-list" class="activity-list" role="log" aria-live="polite" aria-label="Activity list">
           <div class="activity-empty" data-i18n="activity.empty">No activity found for the selected filters.</div>
         </div>
       </div>
@@ -202,18 +241,18 @@
   </div>
 </div>
 
-<div id="avatar-loader" class="loader hidden"></div>
+<div id="avatar-loader" class="loader hidden" aria-label="Loading"></div>
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-<div id="crop-modal" class="modal hidden">
+<div id="crop-modal" class="modal hidden" role="dialog" aria-labelledby="crop-modal-title" aria-modal="true">
   <div class="modal-content">
-    <h3 data-i18n="modal.crop.title">Crop Image</h3>
-    <img id="crop-image" style="max-width:100%; display:block; margin:auto;">
+    <h3 id="crop-modal-title" data-i18n="modal.crop.title">Crop Image</h3>
+    <img id="crop-image" alt="Image to crop">
     
-    <button id="crop-confirm" class="btn btn-primary" data-i18n="modal.crop.use">Use Image</button>
-    <button id="crop-cancel" class="btn btn-danger" data-i18n="modal.crop.cancel">Cancel</button>
+    <button id="crop-confirm" class="btn btn-primary" type="button" data-i18n="modal.crop.use">Use Image</button>
+    <button id="crop-cancel" class="btn btn-danger" type="button" data-i18n="modal.crop.cancel">Cancel</button>
   </div>
 </div>
 

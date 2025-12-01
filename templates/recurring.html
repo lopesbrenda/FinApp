@@ -1,40 +1,40 @@
 {% extends "index.html" %}
 {% block content %}
 <div class="recurring-page">
-  <div class="page-header">
+  <header class="page-header">
     <h1 data-i18n="recurring.title">🔄 Recurring Transactions</h1>
     <p data-i18n="recurring.subtitle">Manage your recurring income and expenses</p>
-  </div>
+  </header>
 
-  <div class="recurring-tabs">
-    <button class="tab-btn active" data-tab="all" data-i18n="recurring.all">All</button>
-    <button class="tab-btn" data-tab="income" data-i18n="recurring.income_tab">Income</button>
-    <button class="tab-btn" data-tab="expenses" data-i18n="recurring.expenses_tab">Expenses</button>
-  </div>
+  <nav class="recurring-tabs" role="tablist" aria-label="Recurring transactions filter">
+    <button class="tab-btn active" data-tab="all" role="tab" aria-selected="true" type="button" data-i18n="recurring.all">All</button>
+    <button class="tab-btn" data-tab="income" role="tab" aria-selected="false" type="button" data-i18n="recurring.income_tab">Income</button>
+    <button class="tab-btn" data-tab="expenses" role="tab" aria-selected="false" type="button" data-i18n="recurring.expenses_tab">Expenses</button>
+  </nav>
 
-  <div class="recurring-summary">
-    <div class="summary-item income">
+  <section class="recurring-summary" role="region" aria-label="Recurring transactions summary">
+    <article class="summary-item income">
       <span class="summary-label" data-i18n="recurring.monthly_income">Monthly Recurring Income</span>
       <span class="summary-value" id="recurring-income">$0.00</span>
-    </div>
-    <div class="summary-item expenses">
+    </article>
+    <article class="summary-item expenses">
       <span class="summary-label" data-i18n="recurring.monthly_expenses">Monthly Recurring Expenses</span>
       <span class="summary-value" id="recurring-expenses">$0.00</span>
-    </div>
-    <div class="summary-item net">
+    </article>
+    <article class="summary-item net">
       <span class="summary-label" data-i18n="recurring.monthly_net">Net Monthly</span>
       <span class="summary-value" id="recurring-net">$0.00</span>
-    </div>
-  </div>
+    </article>
+  </section>
 
-  <div class="recurring-list" id="recurring-list">
+  <div class="recurring-list" id="recurring-list" role="list" aria-label="Recurring transactions list">
     <div class="loading-state">
       <p data-i18n="recurring.loading">Loading recurring transactions...</p>
     </div>
   </div>
 
-  <div class="empty-state" id="empty-state" style="display: none;">
-    <div class="empty-icon">🔄</div>
+  <div class="empty-state hidden" id="empty-state">
+    <div class="empty-icon" aria-hidden="true">🔄</div>
     <h3 data-i18n="recurring.no_recurring">No Recurring Transactions</h3>
     <p data-i18n="recurring.no_recurring_desc">You haven't set up any recurring transactions yet.</p>
     <a href="/dashboard" class="btn" data-i18n="recurring.go_dashboard">Go to Dashboard</a>

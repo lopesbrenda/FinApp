@@ -1,26 +1,66 @@
 {% extends "index.html" %}
 {% block content %}
-<div class="card" style="max-width: 450px; margin: 40px auto;">
+<div class="card card--auth">
   <h1 data-i18n="signup.title">✨ Create Account</h1>
   <p data-i18n="signup.subtitle">Start managing your finances today</p>
   
-  <form id="signup-form" class="form" style="margin-top: 30px;">
-    <input id="signup-name" type="text" data-i18n="signup.name.placeholder" placeholder="Full name" autocomplete="name" required />
-    <input id="signup-email" type="email" data-i18n="signup.email.placeholder" placeholder="Email" autocomplete="email" required />
+  <form id="signup-form" class="form" novalidate>
+    <label for="signup-name" class="sr-only" data-i18n="signup.name.label">Nome completo</label>
+    <input 
+      id="signup-name" 
+      type="text" 
+      data-i18n="signup.name.placeholder" 
+      placeholder="Full name" 
+      autocomplete="name" 
+      required 
+      aria-required="true"
+    >
+    
+    <label for="signup-email" class="sr-only" data-i18n="signup.email.label">Email</label>
+    <input 
+      id="signup-email" 
+      type="email" 
+      data-i18n="signup.email.placeholder" 
+      placeholder="Email" 
+      autocomplete="email" 
+      required 
+      aria-required="true"
+    >
+    
     <div class="password-wrapper">
-      <input id="signup-password" type="password" data-i18n="signup.password.placeholder" placeholder="Password" autocomplete="new-password" required />
-      <button type="button" class="toggle-password" aria-label="Toggle password visibility">🙈</button>
+      <label for="signup-password" class="sr-only" data-i18n="signup.password.label">Senha</label>
+      <input 
+        id="signup-password" 
+        type="password" 
+        data-i18n="signup.password.placeholder" 
+        placeholder="Password" 
+        autocomplete="new-password" 
+        required 
+        aria-required="true"
+      >
+      <button type="button" class="toggle-password" aria-label="Mostrar/ocultar senha">🙈</button>
     </div>
+    
     <div class="password-wrapper">
-      <input id="signup-confirm" type="password" data-i18n="signup.confirm.placeholder" placeholder="Confirm password" autocomplete="new-password" required />
-      <button type="button" class="toggle-password" aria-label="Toggle password visibility">🙈</button>
+      <label for="signup-confirm" class="sr-only" data-i18n="signup.confirm.label">Confirmar senha</label>
+      <input 
+        id="signup-confirm" 
+        type="password" 
+        data-i18n="signup.confirm.placeholder" 
+        placeholder="Confirm password" 
+        autocomplete="new-password" 
+        required 
+        aria-required="true"
+      >
+      <button type="button" class="toggle-password" aria-label="Mostrar/ocultar senha">🙈</button>
     </div>
+    
     <button type="submit" class="btn" data-i18n="signup.submit">Create Account</button>
   </form>
   
-  <p style="margin-top: 20px;">
+  <p class="text-center">
     <span data-i18n="signup.hasaccount">Already have an account?</span> 
-    <a href="/login" style="color: var(--accent, #6c21e4); font-weight: 600;" data-i18n="signup.login">Sign in</a>
+    <a href="/login" class="link-text" data-i18n="signup.login">Sign in</a>
   </p>
 </div>
 

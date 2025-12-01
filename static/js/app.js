@@ -36,11 +36,17 @@ onAuthStateChanged(auth, (user) => {
 
     ["nav-dashboard", "nav-accounts", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.style.display = "inline-block";
+      if (el) {
+        el.classList.remove("hidden");
+        el.style.display = "inline-block";
+      }
     });
     ["nav-login", "nav-signup", "nav-home"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.style.display = "none";
+      if (el) {
+        el.classList.add("hidden");
+        el.style.display = "none";
+      }
     });
     
     const ctaSection = document.getElementById("cta-section");
@@ -58,11 +64,17 @@ onAuthStateChanged(auth, (user) => {
   } else {
     ["nav-dashboard", "nav-accounts", "nav-analytics", "nav-recurring", "nav-profile", "logout-btn"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.style.display = "none";
+      if (el) {
+        el.classList.add("hidden");
+        el.style.display = "none";
+      }
     });
     ["nav-login", "nav-signup", "nav-home"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.style.display = "inline-block";
+      if (el) {
+        el.classList.remove("hidden");
+        el.style.display = "inline-block";
+      }
     });
 
     if (["/dashboard", "/profile", "/analytics", "/recurring", "/accounts"].includes(path)) {

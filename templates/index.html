@@ -1,37 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="description" content="FinLife - Personal Finance Management">
+  <meta name="theme-color" content="#6c21e4">
   <title>FinLife</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style/main.css') }}">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/components.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/modal.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/validators.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}">
 </head>
 <body>
-  <nav class="main-nav">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <nav class="main-nav" role="navigation" aria-label="Main navigation">
     <div class="nav-container">
       <div class="nav-left">
-        <a class="brand" href="/home">FinLife 💜</a>
+        <a class="brand" href="/home" aria-label="FinLife - Home">FinLife 💜</a>
       </div>
       <div class="nav-right">
         <a class="nav-link" href="/home" id="nav-home" data-i18n="nav.home">Home</a>
-        <a class="nav-link" href="/dashboard" id="nav-dashboard" data-i18n="nav.dashboard" style="display:none;">Dashboard</a>
-        <a class="nav-link" href="/accounts" id="nav-accounts" data-i18n="nav.accounts" style="display:none;">Accounts</a>
-        <a class="nav-link" href="/analytics" id="nav-analytics" data-i18n="nav.analytics" style="display:none;">Analytics</a>
-        <a class="nav-link" href="/recurring" id="nav-recurring" data-i18n="nav.recurring" style="display:none;">Recurring</a>
-        <a class="nav-link" href="/profile" id="nav-profile" data-i18n="nav.profile" style="display:none;">Profile</a>
-        <button id="lang-toggle" class="theme-toggle-btn" aria-label="Toggle language">🇺🇸 EN</button>
-        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">🌙</button>
+        <a class="nav-link hidden" href="/dashboard" id="nav-dashboard" data-i18n="nav.dashboard">Dashboard</a>
+        <a class="nav-link hidden" href="/accounts" id="nav-accounts" data-i18n="nav.accounts">Accounts</a>
+        <a class="nav-link hidden" href="/analytics" id="nav-analytics" data-i18n="nav.analytics">Analytics</a>
+        <a class="nav-link hidden" href="/recurring" id="nav-recurring" data-i18n="nav.recurring">Recurring</a>
+        <a class="nav-link hidden" href="/profile" id="nav-profile" data-i18n="nav.profile">Profile</a>
+        <button id="lang-toggle" class="theme-toggle-btn" aria-label="Toggle language" type="button">🇺🇸 EN</button>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark theme" type="button">🌙</button>
         <a class="nav-link" href="/login" id="nav-login" data-i18n="nav.login">Login</a>
         <a class="nav-link" href="/signup" id="nav-signup" data-i18n="nav.signup">Sign Up</a>
-        <button class="nav-btn" id="logout-btn" data-i18n="nav.logout" style="display:none;">Logout</button>
+        <button class="nav-btn hidden" id="logout-btn" data-i18n="nav.logout" type="button">Logout</button>
       </div>
     </div>
   </nav>
 
-  <main>
+  <main id="main-content" role="main">
     {% block content %}{% endblock %}
   </main>
 
@@ -51,11 +58,9 @@
     import { i18n } from '{{ url_for("static", filename="js/i18n.js") }}';
     import { themeManager } from '{{ url_for("static", filename="js/theme.js") }}';
     
-    // Make globally available
     window.i18n = i18n;
     window.themeManager = themeManager;
     
-    // Initialize sync if available
     try {
       const { initSync } = await import('{{ url_for("static", filename="js/sync.js") }}');
       if (initSync) initSync();
