@@ -5,7 +5,7 @@ import { collection, query, where, getDocs, doc, getDoc } from "https://www.gsta
 import { showAlert } from "../utils/alerts.js";
 import { showModal } from "../utils/modal.js";
 import { addExpense, updateExpense, deleteExpense, getUserExpenses, getCategoryIcon, getCategoryName } from "../expenses.js";
-import { addGoal, getUserGoals, updateGoal, deleteGoal, addContribution } from "../goals.js";
+import { addGoal, archiveGoal, unarchiveGoal, restartGoal, updateGoal, deleteGoal, addContribution } from "../goals.js";
 import { validateAmount } from "../services/currency-service.js";
 import { expandRecurringTransactions, getRecurringLabel } from "../utils/recurring-transactions.js";
 import { showGoalCompletionModal } from "../utils/goal-completion-modal.js";
@@ -561,7 +561,7 @@ function renderGoalsContainer(containerId, goals, type) {
     // -----------------------------
     const buttons = {
       active: `
-        <button class="btn-small archive">✅ Archive</button>
+        <button class="btn-small archive-goal">✅ Archive</button>
         <button class="btn-small edit-goal">✏️ Edit</button>
         <button class="btn-small delete-goal">❌ Delete</button>
       `,
@@ -574,7 +574,6 @@ function renderGoalsContainer(containerId, goals, type) {
         <button class="btn-small archive-goal">📁 Archive</button>
       `
   };
-
 
     // -----------------------------
     // FIX: Now uses the correct buttons variable
@@ -604,38 +603,15 @@ function renderGoalsContainer(containerId, goals, type) {
     `;
   }).join('');
 
+  container.addEventListener('click', async (e) => {
+    const card = e.target.closest('.goal-card');
+    if (!card) return;
 
-  container.querySelectorAll('.archive-goal').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const id = e.target.closest('.goal-card').dataset.id;
-      await archiveGoal(id);
-      renderGoals();
-    });
-  });
+    const id = card.dataset.id;
+    if (!id) return;
 
-  container.querySelectorAll('.restart-goal').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const id = e.target.closest('.goal-card').dataset.id;
-      await restartGoal(id);
-      renderGoals();
-    });
-  });
-
-
-  container.querySelectorAll('.unarchive-goal').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const id = e.target.closest('.goal-card').dataset.id;
-      await unarchiveGoal(id);
-      renderGoals();
-    });
-  });
-  
-  container.querySelectorAll('.delete-goal').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const card = e.target.closest('.goal-card');
-      const id = card?.dataset.id;
-      if (!id) return;
-      
+    // Deletar
+    if (e.target.matches('.delete-goal')) {
       if (confirm('Delete this goal?')) {
         try {
           await deleteGoal(id);
@@ -646,16 +622,64 @@ function renderGoalsContainer(containerId, goals, type) {
           showAlert('Failed to delete goal.', 'error');
         }
       }
+      return;
+    }
+
+    // Arquivar
+    if (e.target.matches('.archive-goal')) {
+      try {
+        await archiveGoal(id);
+        showAlert('Goal archived!', 'success');
+        await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
+      } catch (err) {
+        console.error(err);
+        showAlert('Failed to archive goal.', 'error');
+      }
+      return;
+    }
+
+    // Desarquivar
+    if (e.target.matches('.unarchive-goal')) {
+      try {
+        await unarchiveGoal(id);
+        showAlert('Goal unarchived!', 'success');
+        await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
+      } catch (err) {
+        console.error(err);
+        showAlert('Failed to unarchive goal.', 'error');
+      }
+      return;
+    }
+
+    // Reiniciar
+    if (e.target.matches('.restart-goal')) {
+      try {
+        await restartGoal(id);
+        showAlert('Goal restarted!', 'success');
+        await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
+      } catch (err) {
+        console.error(err);
+        showAlert('Failed to restart goal.', 'error');
+      }
+      return;
+    }
+  });
+
+
+  container.querySelectorAll('.btn-new-goal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const addGoalBtn = document.getElementById('add-goal');
+      if (addGoalBtn) addGoalBtn.click(); // abre o modal de adicionar nova meta
     });
   });
-  
+
   container.querySelectorAll('.edit-goal').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const card = e.target.closest('.goal-card');
       const id = card?.dataset.id;
       const goal = allGoals.find(g => g.id === id);
       if (!goal) return;
-      
+
       let dueDateValue = "";
       if (goal.dueDate) {
         if (typeof goal.dueDate === 'string') dueDateValue = goal.dueDate.split('T')[0];
@@ -692,9 +716,9 @@ function renderGoalsContainer(containerId, goals, type) {
               monthlyContribution: parseFloat(monthlyEl.value) || 0,
               isPriority: priorityEl.checked
             });
-            
-            await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
+
             showAlert("Goal updated!", "success");
+            
             return true;
           } catch (err) {
             console.error(err);
@@ -879,57 +903,63 @@ function setupActionButtons() {
     });
   }
   
-  if (contributeBtn) {
-    contributeBtn.addEventListener('click', () => {
-      if (!allGoals || allGoals.length === 0) {
-        showAlert("No goals available. Create a goal first!", "error");
-        return;
-      }
-      
-      window.goals = allGoals;
-      
-      showModal({
-        title: "Contribute to Goal",
-        type: "contribute",
-        onConfirm: async (modalInstance) => {
-          try {
-            if (!auth.currentUser) { showAlert("Please log in first.", "error"); return false; }
-
-            const goalEl = modalInstance.getField("#contrib-goal");
-            const amountEl = modalInstance.getField("#contrib-amount");
-            const operationEl = modalInstance.getField("#contrib-operation");
-            const noteEl = modalInstance.getField("#contrib-note");
-
-            if (!goalEl.value || !amountEl.value) { showAlert("Fill all fields.", "error"); return false; }
-
-            const rawAmount = parseFloat(amountEl.value) || 0;
-            if (rawAmount <= 0) { showAlert("Amount must be greater than zero.", "error"); return false; }
+  if (contributeBtn) { 
+    contributeBtn.addEventListener('click', () => { 
+      if (!allGoals || allGoals.length === 0) { 
+        showAlert("No goals available. Create a goal first!", "error"); 
+        return; 
+      } 
+      window.goals = allGoals; 
+      showModal({ 
+        title: "Contribute to Goal", 
+        type: "contribute", 
+        onConfirm: async (modalInstance) => { 
+          try { 
+            if (!auth.currentUser) { 
+              showAlert("Please log in first.", "error"); 
+              return false; 
+            } 
+            const goalEl = modalInstance.getField("#contrib-goal"); 
+            const amountEl = modalInstance.getField("#contrib-amount"); 
+            const operationEl = modalInstance.getField("#contrib-operation"); 
+            const noteEl = modalInstance.getField("#contrib-note"); 
             
-            const amount = operationEl?.value === "withdraw" ? -rawAmount : rawAmount;
-            const result = await addContribution(goalEl.value.trim(), amount, noteEl?.value?.trim() || '');
+            if (!goalEl.value || !amountEl.value) { 
+              showAlert("Fill all fields.", "error"); 
+              return false; 
+            } 
             
+            const rawAmount = parseFloat(amountEl.value) || 0; 
+            if (rawAmount <= 0) { 
+              showAlert("Amount must be greater than zero.", "error"); 
+              return false; 
+            } 
+            
+            const amount = operationEl?.value === "withdraw" ? -rawAmount : rawAmount; 
+            const goalId = goalEl.value.trim();
+            const result = await addContribution(goalEl.value.trim(), amount, noteEl?.value?.trim() || ''); 
             await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
-            showAlert(result.isWithdrawal ? "Withdrawal registered!" : "Contribution added!", "success");
+            showAlert(result.isWithdrawal ? "Withdrawal registered!" : "Contribution added!", "success"); 
             
-            if (result.justCompleted) {
-              const goal = allGoals.find(g => g.id === goalEl.value);
-              if (goal) {
-                setTimeout(() => showGoalCompletionModal(goal, async () => {
-                  await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
-                }), 500);
-              }
-            }
-            
-            return true;
-          } catch (err) {
-            console.error(err);
-            showAlert("Failed to add contribution.", "error");
-            return false;
-          }
-        }
-      });
-    });
-  }
+            if (result.justCompleted) { 
+              const goal = allGoals.find(g => g.id === goalId); 
+            if (goal) { 
+              setTimeout(() => { 
+                showGoalCompletionModal(goal, async (action) => { 
+                  if (['archived','restarted'].includes(action)) { 
+                    await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year'); 
+                  } 
+                }); 
+              }, 500); 
+            }} return true; 
+          } catch (err) { 
+            console.error(err); 
+            showAlert("Failed to add contribution.", "error"); 
+            return false; 
+          }} 
+      }); 
+    }); 
+  } 
 }
 
 async function refreshAnalytics(period) {

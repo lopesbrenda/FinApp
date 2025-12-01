@@ -460,13 +460,13 @@
   box-shadow: 0 12px 30px rgba(52, 152, 219, 0.3);
 }
 
-.btn-restart {
+.btn-new-goal {
   border-color: #e67e22;
   background: linear-gradient(135deg, #fff7ed 0%, #fee2e2 100%);
   color: #ea580c;
 }
 
-.btn-restart:hover {
+.btn-new-goal:hover {
   background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
   color: white;
   border-color: #e67e22;
@@ -507,13 +507,13 @@
   background: #3498db;
 }
 
-.dark .btn-restart {
+.dark .btn-new-goal {
   background: linear-gradient(135deg, #5f2e0f 0%, #5f2e0f 100%);
   color: #fb923c;
   border-color: #f97316;
 }
 
-.dark .btn-restart:hover {
+.dark .btn-new-goal:hover {
   background: #e67e22;
 }
 

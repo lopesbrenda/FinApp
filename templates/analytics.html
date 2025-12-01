@@ -89,21 +89,6 @@
     </article>
   </div>
 
-  <section class="transactions-section full-width" aria-labelledby="transactions-title">
-    <div class="section-header">
-      <h3 id="transactions-title" data-i18n="dashboard.transactions">Recent Transactions</h3>
-      <button id="filters-btn" class="btn btn--small" type="button">
-        🔍 <span data-i18n="filter.filters">Filters</span>
-      </button>
-    </div>
-    
-    <div id="expenses-list" class="text-left">
-      <p class="no-data">
-        <span data-i18n="dashboard.noTransactions">No transactions yet. Click + Income or + Expense to start!</span>
-      </p>
-    </div>
-  </section>
-
   <section id="goals" class="goals-section full-width" aria-labelledby="goals-title">
     <div class="section-header">
       <h3 id="goals-title" data-i18n="dashboard.myGoals">My Goals</h3>
@@ -145,6 +130,22 @@
       </div>
     </div>
   </section>
+
+  <section class="transactions-section full-width" aria-labelledby="transactions-title">
+    <div class="section-header">
+      <h3 id="transactions-title" data-i18n="dashboard.transactions">Recent Transactions</h3>
+      <button id="filters-btn" class="btn btn--small" type="button">
+        🔍 <span data-i18n="filter.filters">Filters</span>
+      </button>
+    </div>
+    
+    <div id="expenses-list" class="text-left">
+      <p class="no-data">
+        <span data-i18n="dashboard.noTransactions">No transactions yet. Click + Income or + Expense to start!</span>
+      </p>
+    </div>
+  </section>
+  
 </div>
 
 <script type="module" src="{{ url_for('static', filename='js/pages/analytics.js') }}"></script>

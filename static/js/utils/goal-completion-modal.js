@@ -50,9 +50,9 @@ export function showGoalCompletionModal(goal, onComplete) {
           <span class="btn-icon">📁</span>
           <span data-i18n="archive_goal">Archive Goal</span>
         </button>
-        <button class="btn-celebration btn-restart" data-goal-id="${goal.id}">
-          <span class="btn-icon">🔄</span>
-          <span data-i18n="restart_goal">Restart Goal</span>
+        <button class="btn-celebration btn-new-goal" data-goal-id="${goal.id}">
+          <span class="btn-icon">🆕</span>
+          <span data-i18n="start_new_goal">Start New Goal</span>
         </button>
         <button class="btn-celebration btn-keep" data-goal-id="${goal.id}">
           <span class="btn-icon">👀</span>
@@ -67,7 +67,7 @@ export function showGoalCompletionModal(goal, onComplete) {
   document.body.appendChild(modal);
 
   const archiveBtn = modal.querySelector('.btn-archive');
-  const restartBtn = modal.querySelector('.btn-restart');
+  const restartBtn = modal.querySelector('.btn-new-goal');
   const keepBtn = modal.querySelector('.btn-keep');
   const closeBtn = modal.querySelector('.btn-close-celebration');
 
@@ -83,16 +83,13 @@ export function showGoalCompletionModal(goal, onComplete) {
     }
   });
 
-  restartBtn.addEventListener('click', async () => {
-    try {
-      await restartGoal(goal.id);
-      showAlert(i18n.t('goal_restarted_success'), 'success');
-      modal.remove();
-      if (onComplete) onComplete('restarted');
-    } catch (error) {
-      console.error('Error restarting goal:', error);
-      showAlert(i18n.t('goal_restarted_error'), 'error');
-    }
+  restartBtn.addEventListener('click', () => {
+    modal.remove();
+
+    const addGoalBtn = document.getElementById("add-goal");
+    if (addGoalBtn) addGoalBtn.click();
+
+    if (onComplete) onComplete('new_goal_started');
   });
 
   keepBtn.addEventListener('click', () => {

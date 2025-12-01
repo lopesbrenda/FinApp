@@ -22,7 +22,7 @@ export async function addGoal(userId, title, targetAmount, dueDate, monthlyContr
     
     const docRef = await addDoc(collection(db, COLLECTION.GOALS), goalData);
     
-    await logActivity("added_goal", "goals_db", docRef.id, null, {
+    await logActivity("added_goal", COLLECTION.GOALS, docRef.id, null, {
       ...goalData,
       id: docRef.id,
       name: title
@@ -90,7 +90,7 @@ export async function deleteGoal(goalId, goalName) {
     
     await deleteDoc(goalRef);
     
-    await logActivity("deleted_goal", "goals_db", goalId, beforeData, null);
+    await logActivity("deleted_goal", COLLECTION.GOALS, goalId, beforeData, null);
     
     return true;
   } catch (error) {
@@ -147,7 +147,7 @@ export async function addContribution(goalId, amount, note = '') {
     const isExtraContribution = contributionAmount > (data.monthlyContribution || 0) && contributionAmount > 0;
     
     const actionName = isWithdrawal ? "withdrawal_goal" : "contribution_goal";
-    await logActivity(actionName, "goals_db", goalId, 
+    await logActivity(actionName, COLLECTION.GOALS, goalId, 
       { currentAmount: data.currentAmount || 0, name: data.title },
       { currentAmount: total, amount: Math.abs(contributionAmount), name: data.title }
     );
@@ -166,44 +166,6 @@ export async function addContribution(goalId, amount, note = '') {
   }
 }
 
-export async function markAsAchieved(goalId, goalName) {
-  try {
-    const goalRef = doc(db, COLLECTION.GOALS, goalId);
-    
-    let name = goalName;
-    if (!name) {
-      try {
-        const snap = await getDoc(goalRef);
-        if (snap.exists()) {
-          name = snap.data().title;
-        }
-      } catch (e) {}
-    }
-    
-    let beforeData = null;
-    try {
-      const snap = await getDoc(goalRef);
-      if (snap.exists()) beforeData = { id: goalId, ...snap.data() };
-    } catch (e) {}
-    
-    await updateDoc(goalRef, {
-      completedAt: new Date().toISOString(),
-      achieved: true
-    });
-    
-    await logActivity("completed_goal", "goals_db", goalId, beforeData, {
-      ...beforeData,
-      completedAt: new Date().toISOString(),
-      achieved: true
-    });
-    
-    return true;
-  } catch (error) {
-    console.error("Error marking goal as achieved:", error);
-    throw error;
-  }
-}
-
 export async function restartGoal(goalId) {
   try {
     const goalRef = doc(db, COLLECTION.GOALS, goalId);
@@ -214,7 +176,7 @@ export async function restartGoal(goalId) {
       archived: false,
       contributions: []
     });
-    return true;
+    return { id: goalId, restarted: true, currentAmount: 0 };
   } catch (error) {
     console.error("Error restarting goal:", error);
     throw error;
@@ -234,12 +196,12 @@ export async function archiveGoal(goalId) {
       achieved: true
     });
     
-    await logActivity("archived_goal", "goals_db", goalId, 
+    await logActivity("archived_goal", COLLECTION.GOALS, goalId, 
       { id: goalId, ...data },
       { id: goalId, ...data, archived: true }
     );
     
-    return true;
+    return { id: goalId, archived: true };
   } catch (error) {
     console.error("Error archiving goal:", error);
     throw error;
@@ -269,12 +231,12 @@ export async function unarchiveGoal(goalId) {
       archivedAt: null
     });
     
-    await logActivity("unarchived_goal", "goals_db", goalId, beforeData, {
+    await logActivity("unarchived_goal", COLLECTION.GOALS, goalId, beforeData, {
       ...beforeData,
       archived: false
     });
     
-    return true;
+    return { id: goalId, archived: false };
   } catch (error) {
     console.error("Error unarchiving goal:", error);
     throw error;
