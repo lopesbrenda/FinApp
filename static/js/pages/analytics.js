@@ -513,19 +513,19 @@ function renderGoalsList(goals) {
     };
   });
 
-  const archivedGoals = goals.filter(g => g.isArchived);
-  const completedGoals = goals.filter(g => g.isCompleted && !g.isArchived);
   const activeGoals = goals.filter(g => !g.isCompleted && !g.isArchived);
-  
-  renderGoalsContainer('archived-goals-list', archivedGoals, 'archived');
-  renderGoalsContainer('completed-goals-list', completedGoals, 'completed');
+  const completedGoals = goals.filter(g => g.isCompleted && !g.isArchived);
+  const archivedGoals = goals.filter(g => g.isArchived);
+
   renderGoalsContainer('active-goals-list', activeGoals, 'active');
+  renderGoalsContainer('completed-goals-list', completedGoals, 'completed');
+  renderGoalsContainer('archived-goals-list', archivedGoals, 'archived');
 }
 
 function renderGoalsContainer(containerId, goals, type) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  
+
   if (goals.length === 0) {
     const messages = {
       'active': 'No active goals. Create one to start!',
@@ -535,46 +535,100 @@ function renderGoalsContainer(containerId, goals, type) {
     container.innerHTML = `<p style="color: #999; text-align: center; padding: 40px;">${messages[type]}</p>`;
     return;
   }
-  
+
   container.innerHTML = goals.map(goal => {
     const current = Number(goal.currentAmount) || 0;
     const target = Number(goal.targetAmount) || 1;
     const progress = Math.min((current / target) * 100, 100);
-    
+
     const dueDate = parseDate(goal.dueDate);
     const dueDateStr = dueDate ? dueDate.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
-    
+
     const projection = calculateProjection(
       goal.targetAmount,
       goal.currentAmount,
       goal.monthlyContribution
     );
 
-    const projectionHtml = projection && projection.expectedDate ? `<div class="goal-projection">🔮 ${formatExpectedDate(projection.expectedDate)} · ${formatProjectionTime(projection.years, projection.months, window.i18n.t)}</div>` : '';
-    
+    const projectionHtml = projection && projection.expectedDate 
+      ? `<div class="goal-projection">🔮 ${formatExpectedDate(projection.expectedDate)} · ${formatProjectionTime(projection.years, projection.months, window.i18n.t)}</div>` 
+      : '';
+
     const priorityBadge = goal.isPriority ? '⭐ ' : '';
-    
+
+    // -----------------------------
+    // FIX: Buttons defined correctly
+    // -----------------------------
+    const buttons = {
+      active: `
+        <button class="btn-small archive">✅ Archive</button>
+        <button class="btn-small edit-goal">✏️ Edit</button>
+        <button class="btn-small delete-goal">❌ Delete</button>
+      `,
+      archived: `
+        <button class="btn-small unarchive-goal">📂 Unarchive</button>
+        <button class="btn-small delete-goal">❌ Delete</button>
+      `,
+      completed: `
+        <button class="btn-small restart-goal">🔄 Restart</button>
+        <button class="btn-small archive-goal">📁 Archive</button>
+      `
+  };
+
+
+    // -----------------------------
+    // FIX: Now uses the correct buttons variable
+    // -----------------------------
     return `
       <div class="goal-card" data-id="${goal.id}" style="border-left: 4px solid ${goal.isPriority ? '#f59e0b' : '#6c21e4'}">
         <div class="goal-header">
           <h4>${priorityBadge}${goal.title || 'Untitled Goal'}</h4>
           ${dueDateStr ? `<span class="goal-due">Due: ${dueDateStr}</span>` : ''}
         </div>
+
         ${projectionHtml}
+
         <div class="goal-progress-bar">
           <div class="goal-progress-fill" style="width: ${progress}%"></div>
         </div>
+
         <div class="goal-amounts">
           <span>${formatCurrency(current)} / ${formatCurrency(target)}</span>
           <span>${progress.toFixed(0)}%</span>
         </div>
+
         <div class="goal-actions">
-          ${type === 'active' ? '<button class="btn-small edit-goal">Edit</button>' : ''}
-          <button class="btn-small delete-goal">Delete</button>
+          ${buttons[type] || ''}
         </div>
       </div>
     `;
   }).join('');
+
+
+  container.querySelectorAll('.archive-goal').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.closest('.goal-card').dataset.id;
+      await archiveGoal(id);
+      renderGoals();
+    });
+  });
+
+  container.querySelectorAll('.restart-goal').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.closest('.goal-card').dataset.id;
+      await restartGoal(id);
+      renderGoals();
+    });
+  });
+
+
+  container.querySelectorAll('.unarchive-goal').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.closest('.goal-card').dataset.id;
+      await unarchiveGoal(id);
+      renderGoals();
+    });
+  });
   
   container.querySelectorAll('.delete-goal').forEach(btn => {
     btn.addEventListener('click', async (e) => {
