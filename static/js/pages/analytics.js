@@ -466,7 +466,7 @@ function renderExpensesList(expenses) {
 
     html += `</div>`;
   });
-  
+      
   container.innerHTML = html;
 
   container.querySelectorAll('.delete-transaction').forEach(btn => {
@@ -495,8 +495,14 @@ function renderGoalsList(goals) {
   const today = new Date();
 
   goals = goals.map(g => {
-    const isArchived = g.archived === true || g.archived === "true";
-    const isCompleted = !isArchived && g.currentAmount >= g.targetAmount;
+    const archivedValue = g.isArchived ?? g.archived ?? false;
+    const isArchived = archivedValue === true || archivedValue === "true";
+
+    const current = Number(g.currentAmount) || 0;
+    const target = Number(g.targetAmount) || 1;
+
+    const isCompleted = !isArchived && current >= target;
+
 
     const projection = calculateProjection(
       g.targetAmount,
@@ -615,6 +621,10 @@ function renderGoalsContainer(containerId, goals, type) {
       if (confirm('Delete this goal?')) {
         try {
           await deleteGoal(id);
+          
+          allGoals = normalizeGoalRecords(await loadGoals(auth.currentUser.uid));
+          renderGoalsList(allGoals);
+
           showAlert('Goal deleted!', 'success');
           await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
         } catch (err) {
@@ -717,6 +727,9 @@ function renderGoalsContainer(containerId, goals, type) {
               isPriority: priorityEl.checked
             });
 
+            allGoals = normalizeGoalRecords(await loadGoals(auth.currentUser.uid));
+            renderGoalsList(allGoals);
+
             showAlert("Goal updated!", "success");
             
             return true;
@@ -738,10 +751,7 @@ function setupGoalTabs() {
       tab.classList.add('active');
       
       const target = tab.dataset.tab;
-      document.querySelectorAll('.goals-tab-content').forEach(c => {
-        c.classList.add('hidden');
-      });
-
+      document.querySelectorAll('.goals-tab-content').forEach(c => {c.classList.add('hidden');});
       document.getElementById(`${target}-goals-container`)?.classList.remove('hidden');
     });
   });
@@ -890,6 +900,10 @@ function setupActionButtons() {
             if (!titleEl.value || !targetEl.value || !dateEl.value) { showAlert("Fill all fields.", "error"); return false; }
 
             await addGoal(auth.currentUser.uid, titleEl.value.trim(), parseFloat(targetEl.value) || 0, dateEl.value, parseFloat(monthlyEl.value) || 0, priorityEl.checked);
+
+            allGoals = normalizeGoalRecords(await loadGoals(auth.currentUser.uid));
+            renderGoalsList(allGoals);
+            
             await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
             showAlert("Goal added!", "success");
             return true;
@@ -938,6 +952,10 @@ function setupActionButtons() {
             const amount = operationEl?.value === "withdraw" ? -rawAmount : rawAmount; 
             const goalId = goalEl.value.trim();
             const result = await addContribution(goalEl.value.trim(), amount, noteEl?.value?.trim() || ''); 
+
+            allGoals = normalizeGoalRecords(await loadGoals(auth.currentUser.uid));
+            renderGoalsList(allGoals);
+
             await refreshAnalytics(document.getElementById('analytics-period')?.value || 'current_year');
             showAlert(result.isWithdrawal ? "Withdrawal registered!" : "Contribution added!", "success"); 
             
@@ -1023,3 +1041,9 @@ document.addEventListener('themeChanged', () => {
     refreshAnalytics(periodSelect.value);
   }
 });
+
+async function reloadGoals() {
+  if (!auth.currentUser) return;
+  allGoals = normalizeGoalRecords(await loadGoals(auth.currentUser.uid));
+  renderGoalsList(allGoals);
+}
