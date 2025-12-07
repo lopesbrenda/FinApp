@@ -376,7 +376,7 @@ function renderTopCategories(transactions) {
   container.innerHTML = categoryData.labels.slice(0, 5).map((label, i) => {
     const amount = categoryData.data[i];
     const percent = ((amount / categoryData.total) * 100).toFixed(1);
-    return `<div class="top-item"><div class="top-item-info"><span class="top-item-rank">${i + 1}</span><span class="top-item-name">${label}</span></div><div class="top-item-stats"><span class="top-item-amount">${formatCurrency(amount)}</span><span class="top-item-percent">${percent}%</span></div><div class="top-item-bar"><div class="top-item-fill" style="width: ${percent}%; background: ${chartColors[i]}"></div></div></div>`;
+    return `<div class="top-item"><div class="top-item-info"><span class="top-item-rank">${i + 1}</span><span class="top-item-name">${label}</span></div><div class="top-item-stats"><span class="top-item-amount">${formatCurrency(amount)} </span><span class="top-item-percent"> · ${percent}%</span></div><div class="top-item-bar"><div class="top-item-fill" style="width: ${percent}%; background: ${chartColors[i]}"></div></div></div>`;
   }).join('');
 }
 
@@ -395,7 +395,7 @@ function renderLargestExpenses(transactions) {
     const date = parseDate(t.date);
     const dateStr = date ? date.toLocaleDateString() : '';
     const catName = getCategoryName(t.category, 'expense');
-    return `<div class="top-item expense-item"><div class="top-item-info"><span class="top-item-rank">${i + 1}</span><span class="top-item-name">${catName}</span></div><div class="top-item-stats"><span class="top-item-amount expense">${formatCurrency(t.amount)}</span><span class="top-item-date">${dateStr}</span></div></div>`;
+    return `<div class="top-item expense-item"><div class="top-item-info"><span class="top-item-rank">${i + 1}</span><span class="top-item-name">${catName}</span></div><div class="top-item-stats"><span class="top-item-amount expense">${formatCurrency(t.amount)}</span><span class="top-item-date"> · ${dateStr}</span></div></div>`;
   }).join('');
 }
 

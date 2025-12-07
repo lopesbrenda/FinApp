@@ -1,18 +1,5 @@
 # @@ app.py
 
-"""
-FinLife - Personal Finance Management Application
-Main Flask application file.
-
-This is the heart of the Flask app:
-- Creates Flask app instance
-- Loads configuration from config.py
-- Registers blueprints (auth, etc.)
-- Defines HTML routes
-- Defines API routes for Firebase config
-- Starts the server
-"""
-
 from flask import Flask, render_template
 from config import Config
 from auth import auth_bp
@@ -24,8 +11,30 @@ app.config.from_object(Config)
 # Register authentication blueprint
 app.register_blueprint(auth_bp)
 
+from auth import (
+    create_access_token, 
+    create_refresh_token, 
+    verify_token, 
+    refresh_token_endpoint,
+    require_auth
+)
+
 # ==================== HTML ROUTES ====================
 # These routes render templates for the user interface
+
+@app.route("/api/auth/refresh", methods=["POST"])
+def api_refresh_token():
+    """API endpoint for token refresh"""
+    return refresh_token_endpoint()
+
+@app.route("/api/auth/verify", methods=["POST"])
+def api_verify_token():
+    """Verify token validity"""
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    user_id = verify_token(token)
+    if user_id:
+        return jsonify({"valid": True, "user_id": user_id}), 200
+    return jsonify({"valid": False}), 401
 
 @app.route('/')
 @app.route('/home')
@@ -89,6 +98,19 @@ def collections():
     """
     js_code = f"export const COLLECTIONS = {json.dumps(Config.FIREBASE_COLLECTIONS, indent=2)};"
     return app.response_class(js_code, mimetype='application/javascript')
+
+
+# NEW: Security Headers Middleware (add before if __name__ == '__main__':)
+@app.after_request
+def security_headers(response):
+    """Add security headers to all responses"""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    return response
 
 
 # ==================== RUN THE APP ====================
