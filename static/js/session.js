@@ -63,15 +63,20 @@ class SessionManager {
             return;
         }
 
+        // NEW: CSRF Token from meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        
         return fetch(url, {
             ...options,
             headers: {
                 ...options.headers,
-                "Authorization": `Bearer ${this.accessToken}`
+                "Authorization": `Bearer ${this.accessToken}`,
+                "X-CSRF-Token": csrfToken  // CSRF Protection
             },
             credentials: "include"
         });
     }
+
 
     logout() {
         this.accessToken = null;

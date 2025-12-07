@@ -9,3 +9,4 @@ firebase_service_account.json
 firebase_key_base64.txt
 serviceAccount.json
 keys.txt
+/tests

@@ -2,6 +2,8 @@ import { db } from "./firebase/firebase-config.js";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, serverTimestamp, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { COLLECTION } from "./firebase/firebase-dbs.js";
 import { logActivity } from "./services/activity-log.js";
+import { checkGoalNotifications } from './utils/goal-notifications.js';
+import { userPreferencesService } from './services/user-preferences.js'; 
 
 export async function addGoal(userId, title, targetAmount, dueDate, monthlyContribution = 0, isPriority = false) {
   try {
@@ -242,3 +244,22 @@ export async function unarchiveGoal(goalId) {
     throw error;
   }
 }
+
+// ✅ ALERTAS FUNCIONAIS
+export async function initGoalAlerts() {
+  try {
+    if (window.userProfile?.preferences?.alertGoals !== false && window.goals?.length > 0) {
+      console.log('🚀 Disparando goal notifications...');
+      await import('./utils/goal-notifications.js');
+      window.checkGoalNotifications(window.goals, window.userProfile);
+    }
+  } catch (e) {
+    console.log('Goal alerts skipped:', e);
+  }
+}
+
+// Auto-executar quando goals carregarem
+if (window.goals?.length > 0) {
+  initGoalAlerts();
+}
+window.initGoalAlerts = initGoalAlerts;  // Expor globalmente

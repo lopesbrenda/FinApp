@@ -1,11 +1,4 @@
-/**
- * Firestore Service - Client-side CRUD operations
- * 
- * This file contains all Firebase Firestore operations performed from the frontend.
- * Functions here communicate directly with Firebase Firestore database.
- * 
- * Service layer: JS → this file → Firebase
- */
+// js/firestore/firestore-service.js
 
 import { db } from "./firebase-config.js";
 import { 
@@ -276,3 +269,53 @@ export async function updateUserData(userId, data) {
     throw error;
   }
 }
+
+
+/**
+ * Soft Delete Operations (generic for all collections)
+ */
+export const softDeleteDocument = async (collectionPath, docId) => {
+    try {
+        const docRef = doc(collectionPath, docId);
+        await updateDoc(docRef, {
+            deletedAt: serverTimestamp(),
+            permanentlyDeleted: false
+        });
+        return true;
+    } catch (error) {
+        console.error('Soft delete failed:', error);
+        throw error;
+    }
+};
+
+export const undoSoftDelete = async (collectionPath, docId) => {
+    try {
+        const docRef = doc(collectionPath, docId);
+        await updateDoc(docRef, {
+            deletedAt: null,
+            permanentlyDeleted: false
+        });
+        return true;
+    } catch (error) {
+        console.error('Undo delete failed:', error);
+        throw error;
+    }
+};
+
+export const permanentDelete = async (collectionPath, docId) => {
+    try {
+        const docRef = doc(collectionPath, docId);
+        await deleteDoc(docRef);
+        return true;
+    } catch (error) {
+        console.error('Permanent delete failed:', error);
+        throw error;
+    }
+};
+
+/**
+ * Query helper: exclude soft-deleted documents
+ */
+export const queryActiveDocuments = (query) => {
+    return queryWhere(query, 'deletedAt', '==', null);
+};

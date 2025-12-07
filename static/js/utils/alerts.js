@@ -70,3 +70,33 @@ if (!document.getElementById('alert-animations')) {
   `;
   document.head.appendChild(style);
 }
+
+
+/**
+ * Undo toast for soft deleted transactions (24h window)
+ */
+function showUndoToast(transactionId) {
+    const toast = document.createElement('div');
+    toast.className = 'undo-toast';
+    toast.innerHTML = `
+        <span>Transação excluída</span>
+        <button onclick="undoDelete('${transactionId}')">Desfazer</button>
+        <button onclick="permanentDelete('${transactionId}')">Excluir de vez</button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto-hide after 10s
+    setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+    }, 10000);
+}
+
+window.undoDelete = async function(transactionId) {
+    await window.sessionManager.fetchWithAuth(`/api/transactions/${transactionId}/undo`, {
+        method: 'PATCH',
+        body: JSON.stringify({ deletedAt: null })
+    });
+    // Refresh UI
+    location.reload();
+};

@@ -2,6 +2,12 @@ import { db } from "../firebase/firebase-config.js";
 import { COLLECTION } from "../firebase/firebase-dbs.js";
 import { logActivity } from "./activity-log.js";
 import { 
+    softDeleteDocument, 
+    undoSoftDelete, 
+    permanentDelete,
+    queryActiveDocuments 
+} from '../firebase/firestore-service.js';
+import { 
   collection, 
   doc, 
   addDoc, 
@@ -568,6 +574,31 @@ export async function createTransfer(userId, fromAccountId, toAccountId, amount,
     throw error;
   }
 }
+
+
+export const deleteTransaction = async (transactionId) => {
+    // Use generic soft delete (24h recovery)
+    return await softDeleteDocument(
+        `users/${currentUser.uid}/transactions`, 
+        transactionId
+    );
+};
+
+/** NEW: Undo soft delete (24h window) */
+export const undoTransactionDelete = async (transactionId) => {
+    return await undoSoftDelete(
+        `users/${currentUser.uid}/transactions`, 
+        transactionId
+    );
+};
+
+/**  NEW: Permanent delete after 24h */
+export const permanentDeleteTransaction = async (transactionId) => {
+    return await permanentDelete(
+        `users/${currentUser.uid}/transactions`, 
+        transactionId
+    );
+};
 
 export function getTotalBalance(accounts) {
   return accounts.reduce((total, account) => {
