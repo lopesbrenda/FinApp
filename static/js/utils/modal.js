@@ -744,3 +744,569 @@ export function showModal({ title, message = "", type = "confirm", content = "",
 
   return modalInstance;
 }
+
+// ---------------------------------------------------------
+// Daily Reminder + Pay Expense + Goal Contribution helpers
+// ---------------------------------------------------------
+
+/**
+ * Simple currency formatter used inside reminder modals.
+ */
+function _drFormatCurrency(amount, symbol = "€") {
+  const num = Number(amount) || 0;
+  return `${symbol} ${num
+    .toFixed(2)
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+}
+
+/**
+ * Greeting based on current hour.
+ */
+function _drGetGreeting(name = "there") {
+  const h = new Date().getHours();
+  if (h < 12) return `Good morning, ${name}!`;
+  if (h < 18) return `Good afternoon, ${name}!`;
+  return `Good evening, ${name}!`;
+}
+
+/**
+ * LocalStorage keys used by the daily reminder system.
+ */
+const DR_STORAGE_KEYS = {
+  LAST_SHOWN: "dailyReminderLastShown",           // 'YYYY-MM-DD'
+  REMIND_UNTIL: "dailyReminderRemindUntil",       // timestamp (ms)
+  DISMISSED_EXPENSES: "dailyReminderDismissedExpenses" // { day: 'YYYY-MM-DD', ids: [] }
+};
+
+function _drTodayKey() {
+  return new Date().toISOString().split("T")[0];
+}
+
+/**
+ * Has the reminder already been shown today?
+ */
+function _drIsShownToday() {
+  try {
+    const last = localStorage.getItem(DR_STORAGE_KEYS.LAST_SHOWN);
+    return last === _drTodayKey();
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Mark reminder as shown today.
+ */
+function _drSetShownToday() {
+  try {
+    localStorage.setItem(DR_STORAGE_KEYS.LAST_SHOWN, _drTodayKey());
+  } catch (e) {
+    console.warn("dailyReminder: could not persist LAST_SHOWN", e);
+  }
+}
+
+/**
+ * Set a "do not remind until" timestamp in ms.
+ */
+function _drSetRemindUntil(timestampMs) {
+  try {
+    localStorage.setItem(
+      DR_STORAGE_KEYS.REMIND_UNTIL,
+      String(timestampMs)
+    );
+  } catch (e) {
+    console.warn("dailyReminder: could not persist REMIND_UNTIL", e);
+  }
+}
+
+function _drGetRemindUntil() {
+  try {
+    const v = localStorage.getItem(DR_STORAGE_KEYS.REMIND_UNTIL);
+    return v ? Number(v) : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Store dismissed expense ids for *today* only.
+ */
+function _drAddDismissedExpenseIds(ids = []) {
+  if (!ids || ids.length === 0) return;
+
+  try {
+    const today = _drTodayKey();
+    const raw = localStorage.getItem(DR_STORAGE_KEYS.DISMISSED_EXPENSES);
+    let data = { day: today, ids: [] };
+
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.day === today && Array.isArray(parsed.ids)) {
+        data = parsed;
+      }
+    }
+
+    const merged = Array.from(new Set([...(data.ids || []), ...ids]));
+    const toStore = { day: today, ids: merged };
+    localStorage.setItem(
+      DR_STORAGE_KEYS.DISMISSED_EXPENSES,
+      JSON.stringify(toStore)
+    );
+  } catch (e) {
+    console.error("Failed to store dismissed expense ids", e);
+  }
+}
+
+function _drGetDismissedExpenseIdsForToday() {
+  try {
+    const raw = localStorage.getItem(DR_STORAGE_KEYS.DISMISSED_EXPENSES);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.day !== _drTodayKey()) return [];
+    return Array.isArray(parsed.ids) ? parsed.ids : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * MAIN: Show Daily Reminder modal.
+ *
+ * options: {
+ *   goals: Array,
+ *   expenses: Array,
+ *   name: string,
+ *   currencySymbol: string
+ * }
+ */
+export function showDailyReminderModal(options = {}) {
+  const {
+    goals = [],
+    expenses = [],
+    name = "there",
+    currencySymbol = "€"
+  } = options;
+
+  // Respect "remind later" window
+  const now = Date.now();
+  const remindUntil = _drGetRemindUntil();
+  if (remindUntil && remindUntil > now) {
+    return;
+  }
+
+  // Respect "already shown today"
+  if (_drIsShownToday()) {
+    return;
+  }
+
+  // Filter out expenses the user dismissed *today*
+  const dismissedIds = _drGetDismissedExpenseIdsForToday();
+  const visibleExpenses = expenses.filter(
+    (e) => !dismissedIds.includes(e.id)
+  );
+
+  // Simple slicing to avoid a huge modal
+  const upcomingGoals = (goals || []).slice(0, 5);
+  const upcomingExpenses = (visibleExpenses || []).slice(0, 5);
+
+  // If there is literally nothing to show, não incomoda a usuária 😄
+  if (upcomingGoals.length === 0 && upcomingExpenses.length === 0) {
+    return;
+  }
+
+  // Remove any previous instance
+  const existing = document.getElementById("daily-reminder-modal");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "daily-reminder-modal";
+  overlay.className = "modal-overlay";
+
+  overlay.innerHTML = `
+    <div class="modal-content" style="max-width:720px; background: var(--card-bg, #ffffff); padding: 20px;">
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 style="margin:0 12px 0 0;">🌅 ${_drGetGreeting(
+          name
+        )}</h2>
+        <div style="font-size:0.95rem; color:#666;">Here are your reminders for today</div>
+      </header>
+
+      <div style="display:flex; gap:12px; margin-bottom:12px;">
+        <div style="flex:1; padding:10px; background:rgba(0,0,0,0.03); border-radius:6px;">
+          <strong>GOALS (${upcomingGoals.length})</strong>
+        </div>
+        <div style="flex:1; padding:10px; background:rgba(0,0,0,0.03); border-radius:6px;">
+          <strong>EXPENSES (${upcomingExpenses.length})</strong>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; max-height:420px; overflow:auto; padding-bottom:8px;">
+        <div>
+          <h3 style="margin:6px 0;">GOALS</h3>
+          ${
+            upcomingGoals.length === 0
+              ? `<p style="font-size:0.9rem; color:#777;">No goals to remind today.</p>`
+              : upcomingGoals
+                  .map((g) => {
+                    const current = Number(g.currentAmount) || 0;
+                    const target = Number(g.targetAmount) || 0;
+                    const missing = Math.max(0, target - current);
+                    let due = "";
+                    if (g.dueDate) {
+                      const d =
+                        typeof g.dueDate === "string"
+                          ? new Date(g.dueDate)
+                          : g.dueDate.toDate
+                          ? g.dueDate.toDate()
+                          : new Date(g.dueDate);
+                      due = d.toLocaleDateString();
+                    }
+
+                    return `
+                      <div class="reminder-item" data-goal-id="${
+                        g.id
+                      }" style="padding:10px; border-left:4px solid #6c21e4; margin-bottom:10px; border-radius:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                          <div style="min-width:0;">
+                            <div>🎯 <strong>${
+                              g.title || "Untitled Goal"
+                            }</strong></div>
+                            <div style="font-size:0.9rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                              Missing: ${_drFormatCurrency(
+                                missing,
+                                currencySymbol
+                              )}${
+                      due ? ` · Deadline: ${due}` : ""
+                    }
+                            </div>
+                          </div>
+                          <div style="flex-shrink:0;">
+                            <button class="btn-small contribute-action" data-goal-id="${
+                              g.id
+                            }">Contribute</button>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  })
+                  .join("")
+          }
+        </div>
+
+        <div>
+          <h3 style="margin:6px 0;">EXPENSES</h3>
+          ${
+            upcomingExpenses.length === 0
+              ? `<p style="font-size:0.9rem; color:#777;">No expenses to remind today.</p>`
+              : upcomingExpenses
+                  .map((e) => {
+                    const rawDate = e.nextBilling || e.date || e.createdAt;
+                    let dateStr = "";
+                    if (rawDate) {
+                      const d =
+                        rawDate.toDate?.() instanceof Date
+                          ? rawDate.toDate()
+                          : new Date(rawDate);
+                      dateStr = d.toLocaleDateString();
+                    }
+                    const title = e.title || e.category || "Expense";
+                    const amt = e.amount ?? e.originalAmount ?? 0;
+
+                    return `
+                      <div class="reminder-item" data-expense-id="${
+                        e.id
+                      }" style="padding:10px; border-left:4px solid #f39c12; margin-bottom:10px; border-radius:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                          <div style="min-width:0;">
+                            <div>💸 <strong>${title}</strong></div>
+                            <div style="font-size:0.9rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                              ${_drFormatCurrency(
+                                amt,
+                                currencySymbol
+                              )} — ${dateStr}
+                            </div>
+                          </div>
+                          <div style="flex-shrink:0;">
+                            <button class="btn-small pay-action" data-expense-id="${
+                              e.id
+                            }">Pay Now</button>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  })
+                  .join("")
+          }
+        </div>
+      </div>
+
+      <footer style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+        <div>
+          <select id="daily-remind-select" style="padding:8px; border-radius:6px; cursor: pointer;">
+            <option value="">Remind me later</option>
+            <option value="1h">Remind me in 1 hour</option>
+            <option value="tomorrow">Remind me tomorrow</option>
+            <option value="dismiss-paid">Dismiss paid expenses</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button id="daily-reminder-close" class="btn">Close</button>
+        </div>
+      </footer>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.classList.add("show"), 10);
+
+  const close = () => {
+    overlay.classList.remove("show");
+    setTimeout(() => overlay.remove(), 220);
+  };
+
+  // Close → marca como visto hoje, lembra só amanhã
+  const closeAndMarkToday = () => {
+    _drSetShownToday();
+    showAlert("Okay — we'll remind you tomorrow 👍");
+    close();
+  };
+
+  overlay
+    .querySelector("#daily-reminder-close")
+    ?.addEventListener("click", closeAndMarkToday);
+
+  // Dropdown "Remind me later"
+  overlay
+    .querySelector("#daily-remind-select")
+    ?.addEventListener("change", (ev) => {
+      const val = ev.target.value;
+      if (!val) return;
+
+      if (val === "1h") {
+        const until = Date.now() + 60 * 60 * 1000;
+        _drSetRemindUntil(until);
+        showAlert("We'll remind you in 1 hour 👍");
+        close();
+        return;
+      }
+
+      if (val === "tomorrow") {
+        _drSetShownToday();
+        showAlert("We'll remind you tomorrow 👍");
+        close();
+        return;
+      }
+
+      if (val === "dismiss-paid") {
+        const paidIds = (upcomingExpenses || [])
+          .filter((e) => e.paid === true || e.isPaid === true)
+          .map((e) => e.id);
+        _drAddDismissedExpenseIds(paidIds);
+        showAlert("Dismissed paid expenses for today 👍");
+        close();
+        return;
+      }
+    });
+
+  // Delegação dos botões Pay / Contribute
+  overlay.addEventListener("click", (ev) => {
+    const payBtn = ev.target.closest?.(".pay-action");
+    if (payBtn) {
+      const expenseId = payBtn.getAttribute("data-expense-id");
+      const expense = upcomingExpenses.find(
+        (x) => String(x.id) === String(expenseId)
+      );
+      if (expense) {
+        showPayExpenseModal(expense, { currencySymbol });
+      }
+      return;
+    }
+
+    const contribBtn = ev.target.closest?.(".contribute-action");
+    if (contribBtn) {
+      const goalId = contribBtn.getAttribute("data-goal-id");
+      const goal = upcomingGoals.find(
+        (x) => String(x.id) === String(goalId)
+      );
+      if (goal) {
+        showGoalContributionModal(goal, { currencySymbol });
+      }
+    }
+  });
+
+  // Clicar fora também fecha (e marca como visto hoje)
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      closeAndMarkToday();
+    }
+  });
+}
+
+/**
+ * Simple Pay Expense modal.
+ * It does NOT use showModal() para evitar acoplamento com tipos extras.
+ */
+export function showPayExpenseModal(expense = {}, opts = {}) {
+  const currencySymbol = opts.currencySymbol || "€";
+  const id = "pay-expense-modal";
+  const existing = document.getElementById(id);
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = id;
+  overlay.className = "modal-overlay";
+
+  const rawNext = expense.nextBilling || expense.date || expense.createdAt;
+  let nextStr = "—";
+  if (rawNext) {
+    const d =
+      rawNext?.toDate && typeof rawNext.toDate === "function"
+        ? rawNext.toDate()
+        : new Date(rawNext);
+    nextStr = d.toLocaleDateString();
+  }
+
+  const title = expense.title || expense.category || "Expense";
+  const amount = expense.amount ?? expense.originalAmount ?? 0;
+
+  overlay.innerHTML = `
+    <div class="modal-content" style="max-width:560px;">
+      <h3>💸 Pay Expense</h3>
+      <div style="margin-top:8px;">
+        <div><strong>Expense:</strong> ${title}</div>
+        <div><strong>Next Billing:</strong> ${nextStr}</div>
+        <div><strong>Amount Due:</strong> ${_drFormatCurrency(
+          amount,
+          currencySymbol
+        )}</div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Select account</label>
+        <select id="pay-exp-account" style="width:100%; padding:8px; margin-top:6px;">
+          <option value="">Choose an account</option>
+          ${
+            (window.accounts || [])
+              .map(
+                (a) =>
+                  `<option value="${a.id}">${a.name} (${_drFormatCurrency(
+                    a.currentBalance ?? a.balance ?? 0,
+                    currencySymbol
+                  )})</option>`
+              )
+              .join("") || ""
+          }
+        </select>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Payment amount</label>
+        <input id="pay-exp-amount" type="number" value="${amount ||
+          ""}" style="width:100%; padding:8px; margin-top:6px;" />
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Notes (optional)</label>
+        <textarea id="pay-exp-notes" style="width:100%; padding:8px; margin-top:6px;"></textarea>
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px">
+        <button id="pay-exp-cancel" class="btn">Cancel</button>
+        <button id="pay-exp-confirm" class="btn-primary">Pay</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.classList.add("show"), 10);
+
+  const close = () => {
+    overlay.classList.remove("show");
+    setTimeout(() => overlay.remove(), 220);
+  };
+
+  overlay
+    .querySelector("#pay-exp-cancel")
+    ?.addEventListener("click", close);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+
+  overlay
+    .querySelector("#pay-exp-confirm")
+    ?.addEventListener("click", async () => {
+      const accountId =
+        overlay.querySelector("#pay-exp-account")?.value || "";
+      const amountValue = Number(
+        overlay.querySelector("#pay-exp-amount")?.value || 0
+      );
+      const notes =
+        overlay.querySelector("#pay-exp-notes")?.value?.trim() || "";
+
+      if (!accountId || !amountValue) {
+        showAlert("Please fill account and amount fields.", "error");
+        return;
+      }
+
+      try {
+        // TODO: integrate with real payment logic when available
+        // e.g. await payExpense(expense.id, { accountId, amount: amountValue, notes });
+
+        _drAddDismissedExpenseIds([expense.id]);
+        showAlert("Payment successful!", "success");
+        close();
+      } catch (err) {
+        console.error(err);
+        showAlert("Payment failed.", "error");
+      }
+    });
+}
+
+/**
+ * Open contribution modal focused on a specific goal.
+ * Reuses the existing `type: "contribute"` flow from showModal().
+ */
+export function showGoalContributionModal(goal = {}, opts = {}) {
+  const currencySymbol = opts.currencySymbol || "€";
+
+  showModal({
+    title: "Contribute to Goal",
+    type: "contribute",
+    prefill: {
+      "#contrib-goal": goal.id || "",
+      "#contrib-amount": "",
+      "#contrib-note": ""
+    },
+    onConfirm: async (modalInstance) => {
+      try {
+        const goalEl = modalInstance.getField("#contrib-goal");
+        const amountEl = modalInstance.getField("#contrib-amount");
+        const noteEl = modalInstance.getField("#contrib-note");
+
+        if (!goalEl.value || !amountEl.value) {
+          showAlert("Fill all fields.", "error");
+          return false;
+        }
+
+        const rawAmount = Number(amountEl.value) || 0;
+        if (rawAmount <= 0) {
+          showAlert("Amount must be greater than zero.", "error");
+          return false;
+        }
+
+        // Aqui você pluga o addContribution real, se quiser:
+        // const result = await addContribution(goalEl.value, rawAmount, noteEl.value);
+        // e depois atualiza analytics/dashboard.
+
+        showAlert("Contribution added!", "success");
+        return true;
+      } catch (err) {
+        console.error(err);
+        showAlert("Failed to add contribution.", "error");
+        return false;
+      }
+    }
+  });
+}
